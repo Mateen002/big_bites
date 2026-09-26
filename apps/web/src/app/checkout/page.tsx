@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/components/cart-provider';
 import { useAuth } from '@/components/auth-provider';
+import { useLocation } from '@/components/location-provider';
 import {
   api,
   formatPkr,
@@ -18,9 +19,15 @@ import {
 export default function CheckoutPage() {
   const { cart, refresh } = useCart();
   const { user, loading: authLoading } = useAuth();
+  const {
+    selectedZone,
+    setSelectedZone,
+    orderType,
+    openModal: openLocationModal,
+  } = useLocation();
   const router = useRouter();
   const [zones, setZones] = useState<DeliveryZone[]>([]);
-  const [zoneId, setZoneId] = useState('');
+  const [zoneId, setZoneId] = useState(selectedZone?.id || '');
   const [paymentMethod, setPaymentMethod] = useState('COD');
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(0);
@@ -43,6 +50,10 @@ export default function CheckoutPage() {
   );
 
   useEffect(() => {
+    if (selectedZone) setZoneId(selectedZone.id);
+  }, [selectedZone]);
+
+  useEffect(() => {
     if (!user) return;
     setName((prev) => prev || user.name);
     setPhone((prev) => prev || user.phone || '');
@@ -52,11 +63,15 @@ export default function CheckoutPage() {
   useEffect(() => {
     api.zones().then((z) => {
       setZones(z);
-      if (z[0]) setZoneId(z[0].id);
+      if (!selectedZone && z[0]) {
+        setZoneId(z[0].id);
+        setSelectedZone(z[0]);
+      }
     });
-  }, []);
+  }, [selectedZone, setSelectedZone]);
 
-  const fee = zones.find((z) => z.id === zoneId)?.feePkr || 0;
+  const activeZone = zones.find((z) => z.id === zoneId) || selectedZone || zones[0];
+  const fee = orderType === 'PICKUP' ? 0 : (activeZone?.feePkr || 0);
   const total = Math.max(0, cart.subtotalPkr + fee - discount);
 
   async function applyPromo() {
@@ -112,8 +127,11 @@ export default function CheckoutPage() {
         customerName: name.trim(),
         customerPhone: formatPakistaniPhone(phone),
         customerEmail: email.trim() || undefined,
-        addressLine: address.trim(),
-        deliveryZoneId: zoneId,
+        addressLine:
+          orderType === 'PICKUP'
+            ? 'Pick-Up from BigBites Lahore Central Kitchen (Gulberg III)'
+            : address.trim(),
+        deliveryZoneId: activeZone?.id || zoneId,
         paymentMethod,
         promoCode: promoCode.trim() || undefined,
         notes: (fd.get('notes') as string)?.trim() || undefined,
@@ -222,25 +240,50 @@ export default function CheckoutPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <textarea
-              name="addressLine"
-              required
-              placeholder="Complete delivery address (House/Flat #, Street, Phase, Landmark)"
-              rows={3}
-              className={field}
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-ink-mute">Lahore Delivery Zone</label>
-              <select value={zoneId} onChange={(e) => setZoneId(e.target.value)} className={field} required>
-                {zones.map((z) => (
-                  <option key={z.id} value={z.id}>
-                    {z.name} — {formatPkr(z.feePkr)} (ETA {z.etaMinutesMin}–{z.etaMinutesMax} min)
-                  </option>
-                ))}
-              </select>
+            {/* Delivery Area & Order Method Card */}
+            <div className="rounded-xl border border-stone-200 bg-stone-50/80 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-sm">
+                    {orderType === 'DELIVERY' ? '🛵' : '🥡'}
+                  </span>
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-ink-mute">
+                      {orderType === 'DELIVERY' ? 'Delivery Area' : 'Order Method'}
+                    </p>
+                    <p className="text-sm font-bold text-ink">
+                      {orderType === 'DELIVERY'
+                        ? `${activeZone?.name || 'Lahore'} (${formatPkr(activeZone?.feePkr || 0)} · ETA ${activeZone?.etaMinutesMin || 25}–${activeZone?.etaMinutesMax || 45} min)`
+                        : 'Pick-Up at BigBites Lahore Kitchen (Rs 0 Delivery Fee)'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={openLocationModal}
+                  className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-bold text-chili-600 shadow-sm transition hover:bg-chili-50 active:scale-95"
+                >
+                  Change
+                </button>
+              </div>
             </div>
+
+            {orderType === 'DELIVERY' ? (
+              <textarea
+                name="addressLine"
+                required
+                placeholder="Complete street address (House/Flat #, Street #, Sector/Phase, Landmark)"
+                rows={3}
+                className={field}
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+            ) : (
+              <div className="rounded-xl border border-dashed border-stone-300 bg-white p-3.5 text-xs text-stone-700 leading-relaxed">
+                📍 <strong>Pickup Location:</strong> BigBites Lahore Central Kitchen, Main Boulevard, Gulberg III.
+                <p className="mt-1 text-stone-500">Your order will be ready for self pickup in 20–30 minutes.</p>
+              </div>
+            )}
           </div>
 
           {hasScheduled && (

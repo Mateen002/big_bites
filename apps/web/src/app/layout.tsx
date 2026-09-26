@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { CartProvider } from '@/components/cart-provider';
 import { AuthProvider } from '@/components/auth-provider';
+import { LocationProvider } from '@/components/location-provider';
+import { LocationModal } from '@/components/location-modal';
 import { FloatingChrome } from '@/components/floating-chrome';
 import { PageTransition } from '@/components/page-transition';
 import { SiteHeader } from '@/components/site-header';
@@ -25,11 +27,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en">
       <body>
         <AuthProvider>
-          <CartProvider>
-            <SiteHeader categories={categories} />
-            <main className="min-h-screen">
-              <PageTransition>{children}</PageTransition>
-            </main>
+          <LocationProvider>
+            <CartProvider>
+              <SiteHeader categories={categories} />
+              <LocationModal />
+              <main className="min-h-screen">
+                <PageTransition>{children}</PageTransition>
+              </main>
           <footer className="border-t border-ink/10 bg-ink text-white">
             <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 md:grid-cols-4">
               <div>
@@ -80,7 +84,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
           </footer>
           <FloatingChrome />
-          </CartProvider>
+            </CartProvider>
+          </LocationProvider>
         </AuthProvider>
       </body>
     </html>
