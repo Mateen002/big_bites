@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocation, type OrderType } from './location-provider';
 import { formatPkr, type DeliveryZone } from '@/lib/api';
 
@@ -21,8 +21,15 @@ export function LocationModal() {
 
   const [activeType, setActiveType] = useState<OrderType>(orderType);
   const [activeZone, setActiveZone] = useState<DeliveryZone | null>(selectedZone);
+  const [searchQuery, setSearchQuery] = useState('');
   const [locSuccessMsg, setLocSuccessMsg] = useState('');
   const [locErrorMsg, setLocErrorMsg] = useState('');
+
+  const filteredZones = useMemo(() => {
+    if (!searchQuery.trim()) return zones;
+    const q = searchQuery.toLowerCase().trim();
+    return zones.filter((z) => z.name.toLowerCase().includes(q) || z.slug.toLowerCase().includes(q));
+  }, [zones, searchQuery]);
 
   useEffect(() => {
     setActiveType(orderType);
@@ -147,35 +154,113 @@ export function LocationModal() {
               )}
             </div>
 
-            {/* City / Area Dropdown */}
+            {/* Quick Society Shortcuts */}
+            <div>
+              <div className="flex items-center justify-between text-xs text-ink-mute mb-1.5">
+                <span className="font-semibold">Popular Societies</span>
+                <span className="text-[11px] text-ink-soft">{zones.length} areas covered</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {['Valencia Town', 'DHA', 'Johar Town', 'Wapda Town', 'Gulberg', 'Model Town', 'Bahria Town'].map((quickName) => {
+                  const matched = zones.find((z) => z.name.toLowerCase().includes(quickName.toLowerCase()));
+                  if (!matched) return null;
+                  const isSelected = activeZone?.id === matched.id;
+                  return (
+                    <button
+                      key={quickName}
+                      type="button"
+                      onClick={() => {
+                        setActiveZone(matched);
+                        setSelectedZone(matched);
+                      }}
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
+                        isSelected
+                          ? 'bg-chili-500 text-white shadow-sm'
+                          : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                      }`}
+                    >
+                      {quickName}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Area Search & Selectable List */}
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-ink-mute">
-                Select City / Region
+                Search or Select Your Area in Lahore
               </label>
-              <div className="relative">
-                <select
-                  value={activeZone?.id || ''}
-                  onChange={(e) => {
-                    const found = zones.find((z) => z.id === e.target.value);
-                    if (found) {
-                      setActiveZone(found);
-                      setSelectedZone(found);
-                    }
-                  }}
-                  className="w-full appearance-none rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm font-medium text-ink shadow-sm focus:border-chili-500 focus:outline-none focus:ring-1 focus:ring-chili-500"
-                >
-                  <option value="" disabled>
-                    Select City / Region
-                  </option>
-                  {zones.map((z) => (
-                    <option key={z.id} value={z.id}>
-                      Lahore — {z.name} ({formatPkr(z.feePkr)} · {z.etaMinutesMin}–{z.etaMinutesMax} min)
-                    </option>
-                  ))}
-                </select>
-                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-stone-400">
-                  ▼
+
+              {/* Search input */}
+              <div className="relative mb-2">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">
+                  🔍
                 </span>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Type area (e.g. Valencia, Wapda, Lake City)..."
+                  className="w-full rounded-xl border border-stone-200 bg-white py-2 pl-9 pr-8 text-xs font-medium text-ink placeholder:text-stone-400 focus:border-chili-500 focus:outline-none focus:ring-1 focus:ring-chili-500"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-stone-400 hover:text-stone-600"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Scrollable list of areas */}
+              <div className="max-h-48 overflow-y-auto space-y-1.5 rounded-xl border border-stone-100 bg-stone-50/50 p-1.5 scrollbar-thin">
+                {filteredZones.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-stone-500">
+                    No matching area found for &ldquo;{searchQuery}&rdquo;.
+                  </div>
+                ) : (
+                  filteredZones.map((z) => {
+                    const isSelected = activeZone?.id === z.id;
+                    return (
+                      <button
+                        key={z.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveZone(z);
+                          setSelectedZone(z);
+                        }}
+                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition ${
+                          isSelected
+                            ? 'bg-chili-50 border border-chili-200 text-chili-900 shadow-sm'
+                            : 'bg-white border border-stone-100 hover:border-stone-200 hover:bg-stone-50 text-stone-800'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm ${isSelected ? 'text-chili-500' : 'text-stone-400'}`}>
+                            {isSelected ? '✓' : '📍'}
+                          </span>
+                          <div>
+                            <p className="text-xs font-semibold leading-tight">{z.name}</p>
+                            <p className="text-[10px] text-stone-500">
+                              ETA: {z.etaMinutesMin}–{z.etaMinutesMax} mins
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          <span className={`inline-block rounded-md px-1.5 py-0.5 text-[11px] font-bold ${
+                            isSelected ? 'bg-chili-500 text-white' : 'bg-stone-100 text-stone-700'
+                          }`}>
+                            {formatPkr(z.feePkr)}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
