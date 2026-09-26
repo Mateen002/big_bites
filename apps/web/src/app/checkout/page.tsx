@@ -123,6 +123,14 @@ export default function CheckoutPage() {
         payment?: { redirectUrl?: string; message?: string };
       };
 
+      if (typeof window !== 'undefined') {
+        try {
+          const stored = JSON.parse(localStorage.getItem('bigbites_recent_orders') || '[]');
+          const updated = [order.id, ...stored.filter((x: string) => x !== order.id)].slice(0, 10);
+          localStorage.setItem('bigbites_recent_orders', JSON.stringify(updated));
+        } catch {}
+      }
+
       await refresh();
 
       // Avoid popup blocker: direct navigation if payment gateway redirect is present
@@ -130,7 +138,7 @@ export default function CheckoutPage() {
         window.location.href = order.payment.redirectUrl;
         return;
       }
-      router.push(user ? '/account' : `/orders/${order.id}`);
+      router.push(`/orders/${order.id}?new=1`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Checkout failed');
     } finally {

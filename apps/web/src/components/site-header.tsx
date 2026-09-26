@@ -286,6 +286,15 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
           </button>
 
           <Link
+            href="/my-orders"
+            className={`hidden px-3 py-2 text-sm font-medium transition sm:inline ${
+              lightOnDark ? 'text-white/85 hover:text-white' : 'text-ink-soft hover:text-ink'
+            }`}
+          >
+            My Orders
+          </Link>
+
+          <Link
             href={user ? '/account' : '/login'}
             className={`hidden px-3 py-2 text-sm font-medium transition sm:inline ${
               lightOnDark ? 'text-white/85 hover:text-white' : 'text-ink-soft hover:text-ink'
@@ -419,43 +428,32 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-2">
+                <Link
+                  href="/my-orders"
+                  onClick={() => setMenuOpen(false)}
+                  className="border border-ink/15 px-4 py-3 text-center text-sm font-semibold"
+                >
+                  My Orders
+                </Link>
                 {user ? (
-                  <>
-                    <Link
-                      href="/account"
-                      onClick={() => setMenuOpen(false)}
-                      className="border border-ink/15 px-4 py-3 text-center text-sm font-semibold"
-                    >
-                      My orders
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        logout();
-                        setMenuOpen(false);
-                      }}
-                      className="border border-ink/15 px-4 py-3 text-sm font-semibold"
-                    >
-                      Sign out
-                    </button>
-                  </>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logout();
+                      setMenuOpen(false);
+                    }}
+                    className="border border-ink/15 px-4 py-3 text-sm font-semibold text-rose-600"
+                  >
+                    Sign out ({user.name.split(' ')[0]})
+                  </button>
                 ) : (
-                  <>
-                    <Link
-                      href="/login"
-                      onClick={() => setMenuOpen(false)}
-                      className="border border-ink/15 px-4 py-3 text-center text-sm font-semibold"
-                    >
-                      Sign in
-                    </Link>
-                    <Link
-                      href="/signup"
-                      onClick={() => setMenuOpen(false)}
-                      className="bg-ink px-4 py-3 text-center text-sm font-semibold text-paper"
-                    >
-                      Sign up
-                    </Link>
-                  </>
+                  <Link
+                    href="/login"
+                    onClick={() => setMenuOpen(false)}
+                    className="bg-ink px-4 py-3 text-center text-sm font-semibold text-paper"
+                  >
+                    Sign in
+                  </Link>
                 )}
               </div>
 

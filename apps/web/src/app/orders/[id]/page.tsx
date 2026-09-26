@@ -150,8 +150,23 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
           </button>
         </div>
 
+        {/* Order Placed Successfully Banner */}
+        <div className="mt-5 rounded-xl border border-emerald-300 bg-emerald-50/90 p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-lg font-bold text-white shadow-sm">
+              ✓
+            </span>
+            <div>
+              <p className="text-sm font-bold text-emerald-950">Order Placed Successfully!</p>
+              <p className="text-xs text-emerald-800">
+                Your order is confirmed and sent to the BigBites kitchen. Track live cooking and delivery below.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Live Status Hero Card */}
-        <div className="mt-6 overflow-hidden rounded-xl border border-ink/10 bg-white p-6 shadow-sm">
+        <div className="mt-5 overflow-hidden rounded-xl border border-ink/10 bg-white p-6 shadow-sm">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-chili-50 text-2xl">
               {details.icon}
