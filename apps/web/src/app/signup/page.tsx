@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { FormEvent, Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth-provider';
+import { isValidPakistaniPhone, formatPakistaniPhone } from '@/lib/api';
 
 function SignupForm() {
   const { signup, user, loading } = useAuth();
@@ -22,12 +23,19 @@ function SignupForm() {
     setBusy(true);
     setError('');
     const fd = new FormData(e.currentTarget);
+    const phoneRaw = String(fd.get('phone') || '').trim();
+    if (phoneRaw && !isValidPakistaniPhone(phoneRaw)) {
+      setError('Please enter a valid Pakistani phone (e.g. 0300-1234567)');
+      setBusy(false);
+      return;
+    }
+
     try {
       await signup({
         name: String(fd.get('name')),
         email: String(fd.get('email')),
         password: String(fd.get('password')),
-        phone: String(fd.get('phone') || '') || undefined,
+        phone: phoneRaw ? formatPakistaniPhone(phoneRaw) : undefined,
       });
       router.push(next);
     } catch (err) {

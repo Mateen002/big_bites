@@ -143,7 +143,26 @@ export class CartService {
     };
 
     const cart = await this.getCart(sessionId);
-    cart.items.push(item);
+    const selKey = (sels: CartSelection[]) =>
+      (sels || [])
+        .map((s) => `${s.optionGroupId}:${s.optionValueId}:${s.quantity || 1}`)
+        .sort()
+        .join('|');
+
+    const incomingKey = selKey(selections);
+    const existing = cart.items.find(
+      (i) =>
+        i.productId === item.productId &&
+        (i.notes || '') === (item.notes || '') &&
+        selKey(i.selections) === incomingKey,
+    );
+
+    if (existing) {
+      existing.quantity += quantity;
+      existing.lineTotalPkr = existing.unitPricePkr * existing.quantity;
+    } else {
+      cart.items.push(item);
+    }
     return this.save(sessionId, cart.items);
   }
 

@@ -8,11 +8,12 @@ export class StripeStubAdapter implements PaymentAdapter {
   async initiate(input: PaymentInitiateInput): Promise<PaymentResult> {
     const hasKey = Boolean(process.env.STRIPE_SECRET_KEY);
     const reference = `ST-STUB-${input.orderNumber}-${Date.now()}`;
+    const baseUrl = process.env.API_URL || 'http://localhost:4000';
     return {
       method: PaymentMethod.STRIPE,
       status: hasKey ? PaymentStatus.INITIATED : PaymentStatus.INITIATED,
       reference,
-      redirectUrl: `http://localhost:4000/api/v1/payments/sandbox/complete?ref=${reference}&provider=stripe`,
+      redirectUrl: `${baseUrl}/api/v1/payments/sandbox/complete?ref=${reference}&provider=stripe`,
       message: hasKey
         ? 'Stripe stub with key present — replace with Checkout Session creation.'
         : 'Stripe stub: no STRIPE_SECRET_KEY. Simulated checkout URL provided.',

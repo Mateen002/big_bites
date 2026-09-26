@@ -6,7 +6,16 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
-  list(opts: { categorySlug?: string; fulfillment?: string; activeOnly?: boolean }) {
+  list(opts: { categorySlug?: string; fulfillment?: string; activeOnly?: boolean; search?: string }) {
+    const searchFilter = opts.search?.trim()
+      ? {
+          OR: [
+            { name: { contains: opts.search.trim() } },
+            { description: { contains: opts.search.trim() } },
+          ],
+        }
+      : {};
+
     return this.prisma.product.findMany({
       where: {
         ...(opts.activeOnly !== false ? { isActive: true } : {}),
@@ -14,6 +23,7 @@ export class ProductsService {
         ...(opts.fulfillment
           ? { category: { fulfillmentType: opts.fulfillment as FulfillmentType } }
           : {}),
+        ...searchFilter,
       },
       orderBy: { displayOrder: 'asc' },
       include: {

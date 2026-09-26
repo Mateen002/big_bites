@@ -80,7 +80,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refresh();
-  }, [refresh]);
+    const handleUnauthorized = () => persist(null, null);
+    window.addEventListener('auth-unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth-unauthorized', handleUnauthorized);
+  }, [refresh, persist]);
 
   const login = useCallback(
     async (email: string, password: string) => {

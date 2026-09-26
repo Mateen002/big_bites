@@ -142,6 +142,13 @@ async function request<T>(
     res.headers.get('x-cart-session') || res.headers.get('X-Cart-Session');
   if (newSession) setCartSession(newSession);
 
+  if (res.status === 401) {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(CUSTOMER_TOKEN_KEY);
+      window.dispatchEvent(new Event('auth-unauthorized'));
+    }
+  }
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
     throw new Error(
@@ -171,10 +178,12 @@ export const api = {
     request<Category & { products: Product[]; optionGroups: OptionGroup[] }>(
       `/categories/${slug}`,
     ),
-  products: (params?: { category?: string; fulfillment?: string }) => {
+  products: (params?: { category?: string; fulfillment?: string; q?: string }) => {
     const q = new URLSearchParams(params as Record<string, string>).toString();
     return request<Product[]>(`/products${q ? `?${q}` : ''}`);
   },
+  search: (query: string) =>
+    request<Product[]>(`/products?q=${encodeURIComponent(query)}`),
   product: (slug: string) => request<Product>(`/products/${slug}`),
   zones: () => request<DeliveryZone[]>('/zones'),
   cart: {
@@ -232,4 +241,18 @@ export function formatPkr(amount: number) {
 
 export function fulfillmentLabel(type: FulfillmentType) {
   return type === 'HOT_NOW' ? 'Hot & Fast' : 'Scheduled delivery';
+}
+
+export function isValidPakistaniPhone(phone: string): boolean {
+  const cleaned = phone.replace(/[\s\-()]/g, '');
+  return /^((\+92)|(0092)|(0))?3[0-9]{9}$/.test(cleaned);
+}
+
+export function formatPakistaniPhone(phone: string): string {
+  const cleaned = phone.replace(/[\s\-()]/g, '');
+  if (cleaned.startsWith('+92')) return cleaned;
+  if (cleaned.startsWith('0092')) return `+${cleaned.slice(2)}`;
+  if (cleaned.startsWith('0')) return `+92${cleaned.slice(1)}`;
+  if (cleaned.startsWith('3') && cleaned.length === 10) return `+92${cleaned}`;
+  return cleaned;
 }

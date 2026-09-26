@@ -1,11 +1,19 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/components/cart-provider';
 import { useAuth } from '@/components/auth-provider';
-import { api, formatPkr, fulfillmentLabel, setCartSession, type DeliveryZone } from '@/lib/api';
+import {
+  api,
+  formatPkr,
+  fulfillmentLabel,
+  isValidPakistaniPhone,
+  formatPakistaniPhone,
+  setCartSession,
+  type DeliveryZone,
+} from '@/lib/api';
 
 export default function CheckoutPage() {
   const { cart, refresh } = useCart();
@@ -16,12 +24,23 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState('COD');
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(0);
+  const [promoSuccess, setPromoSuccess] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
+
+  // Delivery slot state for scheduled frozen items
+  const [slotDay, setSlotDay] = useState('tomorrow');
+  const [slotTime, setSlotTime] = useState('dinner');
+
+  const hasHot = useMemo(() => cart.items.some((i) => i.fulfillmentType === 'HOT_NOW'), [cart.items]);
+  const hasScheduled = useMemo(
+    () => cart.items.some((i) => i.fulfillmentType === 'SCHEDULED'),
+    [cart.items],
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -41,42 +60,75 @@ export default function CheckoutPage() {
   const total = Math.max(0, cart.subtotalPkr + fee - discount);
 
   async function applyPromo() {
+    if (!promoCode.trim()) return;
     setError('');
+    setPromoSuccess('');
     try {
-      const res = await api.validatePromo(promoCode, cart.subtotalPkr);
+      const res = await api.validatePromo(promoCode.trim(), cart.subtotalPkr);
       setDiscount(res.discountPkr);
+      setPromoSuccess(`Applied: ${res.promo.name} (−${formatPkr(res.discountPkr)})`);
     } catch (e) {
       setDiscount(0);
+      setPromoSuccess('');
       setError(e instanceof Error ? e.message : 'Invalid promo');
     }
   }
 
+  function getCalculatedScheduledDate(): string {
+    const target = new Date();
+    if (slotDay === 'tomorrow') {
+      target.setDate(target.getDate() + 1);
+    } else if (slotDay === 'day_after') {
+      target.setDate(target.getDate() + 2);
+    }
+
+    if (slotTime === 'lunch') {
+      target.setHours(13, 0, 0, 0);
+    } else if (slotTime === 'afternoon') {
+      target.setHours(16, 30, 0, 0);
+    } else {
+      // dinner
+      target.setHours(20, 0, 0, 0);
+    }
+    return target.toISOString();
+  }
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setBusy(true);
     setError('');
+
+    if (!isValidPakistaniPhone(phone)) {
+      setError('Please provide a valid Pakistani mobile number (e.g. 0300-1234567 or +923001234567)');
+      return;
+    }
+
+    setBusy(true);
     const fd = new FormData(e.currentTarget);
     try {
       if (cart.sessionId) setCartSession(cart.sessionId);
+      const scheduledFor = hasScheduled ? getCalculatedScheduledDate() : undefined;
+
       const order = (await api.checkout({
-        customerName: name,
-        customerPhone: phone,
-        customerEmail: email || undefined,
-        addressLine: address,
+        customerName: name.trim(),
+        customerPhone: formatPakistaniPhone(phone),
+        customerEmail: email.trim() || undefined,
+        addressLine: address.trim(),
         deliveryZoneId: zoneId,
         paymentMethod,
-        promoCode: promoCode || undefined,
-        notes: fd.get('notes') || undefined,
-        scheduledFor: fd.get('scheduledFor')
-          ? new Date(String(fd.get('scheduledFor'))).toISOString()
-          : undefined,
+        promoCode: promoCode.trim() || undefined,
+        notes: (fd.get('notes') as string)?.trim() || undefined,
+        scheduledFor,
       })) as {
         id: string;
         payment?: { redirectUrl?: string; message?: string };
       };
+
       await refresh();
+
+      // Avoid popup blocker: direct navigation if payment gateway redirect is present
       if (order.payment?.redirectUrl && paymentMethod !== 'COD') {
-        window.open(order.payment.redirectUrl, '_blank');
+        window.location.href = order.payment.redirectUrl;
+        return;
       }
       router.push(user ? '/account' : `/orders/${order.id}`);
     } catch (err) {
@@ -87,15 +139,16 @@ export default function CheckoutPage() {
   }
 
   const field =
-    'w-full border border-ink/15 bg-white px-4 py-3 text-sm text-ink placeholder:text-ink-mute/60 focus:border-chili-500 focus:outline-none';
+    'w-full rounded-md border border-ink/15 bg-white px-4 py-3 text-sm text-ink placeholder:text-ink-mute/60 focus:border-chili-500 focus:outline-none transition';
 
   if (!cart.items.length) {
     return (
       <div className="mx-auto max-w-lg px-5 py-28 text-center">
         <h1 className="font-display text-3xl text-ink">Cart is empty</h1>
-        <a href="/order-now" className="mt-6 inline-block font-semibold text-chili-500">
+        <p className="mt-2 text-sm text-ink-mute">Add sizzling dishes or stock your freezer first.</p>
+        <Link href="/order-now" className="btn-primary mt-6">
           Browse menu →
-        </a>
+        </Link>
       </div>
     );
   }
@@ -103,147 +156,243 @@ export default function CheckoutPage() {
   return (
     <div className="bg-paper pt-20">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-12 lg:grid-cols-5">
-        <form onSubmit={onSubmit} className="space-y-4 lg:col-span-3">
-          <h1 className="font-display text-4xl text-ink">Checkout</h1>
+        <form onSubmit={onSubmit} className="space-y-5 lg:col-span-3">
+          <div>
+            <h1 className="font-display text-4xl text-ink">Checkout</h1>
+            <p className="mt-1 text-sm text-ink-mute">Fast delivery throughout Lahore.</p>
+          </div>
+
           {!authLoading && !user && (
-            <p className="border border-ink/10 bg-paper-warm px-4 py-3 text-sm text-ink-soft">
-              <Link href="/login?next=/checkout" className="font-semibold text-chili-500">
+            <div className="rounded-lg border border-ink/10 bg-paper-warm p-4 text-sm text-ink-soft">
+              <Link href="/login?next=/checkout" className="font-semibold text-chili-500 hover:underline">
                 Sign in
               </Link>{' '}
               or{' '}
-              <Link href="/signup?next=/checkout" className="font-semibold text-chili-500">
+              <Link href="/signup?next=/checkout" className="font-semibold text-chili-500 hover:underline">
                 create an account
               </Link>{' '}
-              to keep orders on your side. Guest checkout still works.
-            </p>
-          )}
-          {user && (
-            <p className="text-sm text-ink-soft">
-              Ordering as <span className="font-semibold text-ink">{user.name}</span> — saved to your account.
-            </p>
-          )}
-          <input
-            name="customerName"
-            required
-            placeholder="Full name"
-            className={field}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <input
-            name="customerPhone"
-            required
-            placeholder="Phone (03XX…)"
-            className={field}
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-          <input
-            name="customerEmail"
-            type="email"
-            placeholder="Email (optional)"
-            className={field}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <textarea
-            name="addressLine"
-            required
-            placeholder="Delivery address"
-            rows={3}
-            className={field}
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-          />
-          <select value={zoneId} onChange={(e) => setZoneId(e.target.value)} className={field} required>
-            {zones.map((z) => (
-              <option key={z.id} value={z.id}>
-                {z.name} — {formatPkr(z.feePkr)} ({z.etaMinutesMin}–{z.etaMinutesMax} min)
-              </option>
-            ))}
-          </select>
-          {cart.items.some((i) => i.fulfillmentType === 'SCHEDULED') && (
-            <div>
-              <label className="mb-1 block text-sm text-ink-mute">Preferred delivery slot (frozen)</label>
-              <input name="scheduledFor" type="datetime-local" className={field} />
+              to track your orders automatically. Guest checkout is always available.
             </div>
           )}
-          <fieldset className="space-y-2">
-            <legend className="text-sm font-medium text-ink">Payment</legend>
-            {[
-              ['COD', 'Cash on Delivery'],
-              ['JAZZCASH', 'JazzCash (sandbox)'],
-              ['EASYPAISA', 'Easypaisa (sandbox)'],
-              ['STRIPE', 'Card / Stripe (stub)'],
-            ].map(([value, label]) => (
-              <label key={value} className="flex items-center gap-2 text-sm text-ink-soft">
-                <input
-                  type="radio"
-                  name="pay"
-                  checked={paymentMethod === value}
-                  onChange={() => setPaymentMethod(value)}
-                />
-                {label}
-              </label>
-            ))}
-          </fieldset>
-          <div className="flex gap-2">
+
+          {hasHot && hasScheduled && (
+            <div className="rounded-lg border border-mustard-400 bg-mustard-50/60 p-4 text-sm text-ink">
+              <p className="font-semibold text-amber-900">📦 Mixed Order Notice</p>
+              <p className="mt-1 text-xs leading-relaxed text-amber-800">
+                Your cart has both <strong>Hot & Fast</strong> items and <strong>Stock Freezer</strong> packs.
+                Your hot food is prepared right away, and your frozen packs will be delivered in the chosen
+                schedule below.
+              </p>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-mute">1. Delivery Contact</h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <input
+                name="customerName"
+                required
+                placeholder="Full name"
+                className={field}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <input
+                name="customerPhone"
+                required
+                placeholder="Phone (0300-1234567)"
+                className={field}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
             <input
-              value={promoCode}
-              onChange={(e) => setPromoCode(e.target.value)}
-              placeholder="Promo code"
-              className={`${field} flex-1`}
+              name="customerEmail"
+              type="email"
+              placeholder="Email address (optional, for receipt)"
+              className={field}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
-            <button type="button" onClick={applyPromo} className="bg-ink px-4 text-sm font-semibold text-paper">
-              Apply
-            </button>
+            <textarea
+              name="addressLine"
+              required
+              placeholder="Complete delivery address (House/Flat #, Street, Phase, Landmark)"
+              rows={3}
+              className={field}
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-ink-mute">Lahore Delivery Zone</label>
+              <select value={zoneId} onChange={(e) => setZoneId(e.target.value)} className={field} required>
+                {zones.map((z) => (
+                  <option key={z.id} value={z.id}>
+                    {z.name} — {formatPkr(z.feePkr)} (ETA {z.etaMinutesMin}–{z.etaMinutesMax} min)
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <textarea name="notes" placeholder="Order notes" rows={2} className={field} />
-          {error && <p className="text-sm text-chili-500">{error}</p>}
-          <button type="submit" disabled={busy} className="btn-primary w-full disabled:opacity-50">
-            {busy ? 'Placing order…' : `Place order · ${formatPkr(total)}`}
+
+          {hasScheduled && (
+            <div className="space-y-3 rounded-lg border border-frost-200 bg-frost-50/50 p-4">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-frost-900">
+                2. Frozen Delivery Time Slot
+              </h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs text-ink-mute">Delivery Day</label>
+                  <select
+                    value={slotDay}
+                    onChange={(e) => setSlotDay(e.target.value)}
+                    className={field}
+                  >
+                    <option value="today">Today</option>
+                    <option value="tomorrow">Tomorrow (Recommended)</option>
+                    <option value="day_after">Day after tomorrow</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-ink-mute">Preferred Window</label>
+                  <select
+                    value={slotTime}
+                    onChange={(e) => setSlotTime(e.target.value)}
+                    className={field}
+                  >
+                    <option value="lunch">Lunch (12:30 PM – 2:30 PM)</option>
+                    <option value="afternoon">Afternoon (3:30 PM – 6:00 PM)</option>
+                    <option value="dinner">Dinner (7:30 PM – 10:00 PM)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-mute">Payment Method</h2>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {[
+                ['COD', 'Cash on Delivery', 'Pay cash when rider arrives'],
+                ['JAZZCASH', 'JazzCash', 'Mobile account or card sandbox'],
+                ['EASYPAISA', 'Easypaisa', 'Wallet account sandbox'],
+                ['STRIPE', 'Credit / Debit Card', 'Visa, Mastercard'],
+              ].map(([value, label, desc]) => (
+                <label
+                  key={value}
+                  className={`flex cursor-pointer flex-col rounded-lg border p-3.5 transition ${
+                    paymentMethod === value
+                      ? 'border-chili-500 bg-chili-50/20 ring-1 ring-chili-500'
+                      : 'border-ink/10 bg-white hover:border-ink/25'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="pay"
+                      value={value}
+                      checked={paymentMethod === value}
+                      onChange={() => setPaymentMethod(value)}
+                      className="text-chili-500"
+                    />
+                    <span className="font-semibold text-ink text-sm">{label}</span>
+                  </div>
+                  <span className="mt-1 pl-5 text-xs text-ink-mute">{desc}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold text-ink-mute">Promo Code</label>
+            <div className="flex gap-2">
+              <input
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                placeholder="Enter coupon code"
+                className={`${field} flex-1 uppercase`}
+              />
+              <button
+                type="button"
+                onClick={applyPromo}
+                className="rounded-md bg-ink px-5 text-sm font-semibold text-paper transition hover:bg-ink/80"
+              >
+                Apply
+              </button>
+            </div>
+            {promoSuccess && <p className="text-xs font-semibold text-emerald-600">{promoSuccess}</p>}
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-ink-mute">Rider Instructions (Optional)</label>
+            <textarea
+              name="notes"
+              placeholder="e.g. Ring doorbell twice, leave at guard room, call upon arrival…"
+              rows={2}
+              className={field}
+            />
+          </div>
+
+          {error && <p className="rounded-md bg-chili-50 p-3 text-sm font-semibold text-chili-600">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={busy}
+            className="btn-primary w-full rounded-md py-4 text-base disabled:opacity-50"
+          >
+            {busy ? 'Placing order…' : `Confirm Order · ${formatPkr(total)}`}
           </button>
         </form>
 
-        <aside className="border border-ink/10 bg-paper-warm p-6 lg:col-span-2">
-          <h2 className="font-display text-2xl text-ink">Order summary</h2>
-          <ul className="mt-4 space-y-3">
+        <aside className="h-fit rounded-xl border border-ink/10 bg-paper-warm p-6 shadow-sm lg:col-span-2">
+          <h2 className="font-display text-2xl text-ink">Order Summary</h2>
+          <ul className="mt-4 divide-y divide-ink/8">
             {cart.items.map((item) => (
-              <li key={item.id} className="flex justify-between gap-3 text-sm">
-                <div>
-                  <p className="text-ink">
-                    {item.quantity}× {item.productName}
-                  </p>
-                  <span
-                    className={`text-[10px] font-bold uppercase ${
-                      item.fulfillmentType === 'HOT_NOW' ? 'text-chili-500' : 'text-frost-600'
-                    }`}
-                  >
-                    {fulfillmentLabel(item.fulfillmentType)}
-                  </span>
+              <li key={item.id} className="py-3 text-sm">
+                <div className="flex justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-ink">
+                      {item.quantity}× {item.productName}
+                    </p>
+                    <span
+                      className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                        item.fulfillmentType === 'HOT_NOW'
+                          ? 'bg-chili-100 text-chili-600'
+                          : 'bg-frost-100 text-frost-800'
+                      }`}
+                    >
+                      {fulfillmentLabel(item.fulfillmentType)}
+                    </span>
+                    {item.selections && item.selections.length > 0 && (
+                      <p className="mt-1 text-xs text-ink-mute">
+                        {item.selections.map((s) => s.optionValueLabel).join(', ')}
+                      </p>
+                    )}
+                  </div>
+                  <span className="font-semibold text-ink">{formatPkr(item.lineTotalPkr)}</span>
                 </div>
-                <span className="font-medium">{formatPkr(item.lineTotalPkr)}</span>
               </li>
             ))}
           </ul>
-          <div className="mt-6 space-y-1 border-t border-ink/10 pt-4 text-sm">
-            <div className="flex justify-between">
-              <span className="text-ink-mute">Subtotal</span>
+
+          <div className="mt-4 space-y-2 border-t border-ink/10 pt-4 text-sm">
+            <div className="flex justify-between text-ink-soft">
+              <span>Subtotal</span>
               <span>{formatPkr(cart.subtotalPkr)}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-ink-mute">Delivery</span>
+            <div className="flex justify-between text-ink-soft">
+              <span>Delivery Fee</span>
               <span>{formatPkr(fee)}</span>
             </div>
             {discount > 0 && (
-              <div className="flex justify-between text-frost-600">
+              <div className="flex justify-between font-semibold text-emerald-600">
                 <span>Discount</span>
                 <span>−{formatPkr(discount)}</span>
               </div>
             )}
-            <div className="flex justify-between pt-2 text-base font-semibold">
+            <div className="flex justify-between border-t border-ink/10 pt-3 text-lg font-bold text-ink">
               <span>Total</span>
-              <span>{formatPkr(total)}</span>
+              <span className="text-chili-600">{formatPkr(total)}</span>
             </div>
           </div>
         </aside>

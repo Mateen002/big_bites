@@ -6,7 +6,16 @@ import { usePathname } from 'next/navigation';
 import { useCart } from './cart-provider';
 import { useAuth } from './auth-provider';
 import { AnimatedNumber } from './animated-number';
-import type { Category } from '@/lib/api';
+import { api, formatPkr, assetUrl, fulfillmentLabel, type Category, type Product } from '@/lib/api';
+
+function SearchIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+      <path d="M20 20L16 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 function CartIcon({ className }: { className?: string }) {
   return (
@@ -49,8 +58,34 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
   const [cartBump, setCartBump] = useState(false);
   const prevCount = useRef(cart.itemCount);
 
+  // Instant Search state
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<Product[]>([]);
+  const [searching, setSearching] = useState(false);
+
   const hotCats = categories.filter((c) => c.fulfillmentType === 'HOT_NOW');
   const coldCats = categories.filter((c) => c.fulfillmentType === 'SCHEDULED');
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const t = setTimeout(async () => {
+      try {
+        const found = await api.search(query.trim());
+        setResults(found);
+      } catch {
+        setResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 280);
+    return () => clearTimeout(t);
+  }, [query]);
 
   useEffect(() => {
     let ticking = false;
@@ -86,6 +121,8 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
   useEffect(() => {
     setMenuOpen(false);
     setCatsOpen(false);
+    setSearchOpen(false);
+    setQuery('');
   }, [pathname]);
 
   useEffect(() => {
@@ -235,6 +272,19 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
               )}
           </div>
 
+          {/* Quick Search Button */}
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-medium transition ${
+              lightOnDark ? 'text-white/85 hover:bg-white/10' : 'text-ink-soft hover:bg-ink/5'
+            }`}
+            aria-label="Search dishes"
+          >
+            <SearchIcon className="h-4 w-4" />
+            <span className="hidden lg:inline text-xs">Search</span>
+          </button>
+
           <Link
             href={user ? '/account' : '/login'}
             className={`hidden px-3 py-2 text-sm font-medium transition sm:inline ${
@@ -277,6 +327,77 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
           </button>
         </div>
       </header>
+
+      {/* Instant Search Modal */}
+      {searchOpen && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col bg-ink/65 backdrop-blur-sm p-4 pt-16 sm:p-6 sm:pt-20"
+          onClick={() => setSearchOpen(false)}
+        >
+          <div
+            className="mx-auto w-full max-w-xl rounded-xl border border-ink/10 bg-white p-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 border-b border-ink/10 pb-3">
+              <SearchIcon className="h-5 w-5 text-ink-mute" />
+              <input
+                type="text"
+                autoFocus
+                placeholder="Search karahi, biryani, burgers, kebab packs…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full text-base text-ink placeholder:text-ink-mute/60 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => setSearchOpen(false)}
+                className="rounded px-2.5 py-1 text-xs font-semibold text-ink-mute hover:bg-paper-deep hover:text-ink"
+              >
+                ESC
+              </button>
+            </div>
+
+            <div className="mt-3 max-h-[60vh] overflow-y-auto">
+              {searching && (
+                <p className="py-8 text-center text-xs font-medium text-ink-mute">Searching menu…</p>
+              )}
+              {!searching && query.trim() && results.length === 0 && (
+                <p className="py-8 text-center text-sm text-ink-mute">
+                  No dishes found matching &ldquo;{query}&rdquo;.
+                </p>
+              )}
+              {!searching && results.length > 0 && (
+                <div className="divide-y divide-ink/8">
+                  {results.map((p) => (
+                    <Link
+                      key={p.id}
+                      href={`/products/${p.slug}`}
+                      onClick={() => setSearchOpen(false)}
+                      className="flex items-center justify-between p-3 rounded-lg transition hover:bg-paper-warm"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-ink">{p.name}</p>
+                        <span className="text-[11px] text-ink-mute">
+                          {p.category?.name} · {fulfillmentLabel(p.category?.fulfillmentType as any)}
+                        </span>
+                      </div>
+                      <span className="text-sm font-bold text-chili-600">{formatPkr(p.pricePkr)}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+              {!searching && !query.trim() && (
+                <div className="py-4 text-center text-xs text-ink-mute">
+                  Popular searches: <span className="font-semibold text-ink">Karahi</span>,{' '}
+                  <span className="font-semibold text-ink">Handi</span>,{' '}
+                  <span className="font-semibold text-ink">Seekh Kebab</span>,{' '}
+                  <span className="font-semibold text-ink">Zinger</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile full menu */}
       {menuOpen && (

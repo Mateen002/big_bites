@@ -105,11 +105,13 @@ export class ProductsController {
     @Query('category') category?: string,
     @Query('fulfillment') fulfillment?: string,
     @Query('admin') admin?: string,
+    @Query('q') q?: string,
   ) {
     return this.products.list({
       categorySlug: category,
       fulfillment,
       activeOnly: admin !== '1',
+      search: q,
     });
   }
 
