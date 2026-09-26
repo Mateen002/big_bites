@@ -1,0 +1,22 @@
+{
+  "name": "bigbites",
+  "private": true,
+  "version": "1.0.0",
+  "description": "BigBites — Lahore Pakistani food e-commerce platform",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter @bigbites/api --filter @bigbites/web --filter @bigbites/admin run dev",
+    "dev:api": "pnpm --filter @bigbites/api dev",
+    "dev:web": "pnpm --filter @bigbites/web dev",
+    "dev:admin": "pnpm --filter @bigbites/admin dev",
+    "build": "pnpm -r run build",
+    "db:generate": "pnpm --filter @bigbites/api prisma:generate",
+    "db:migrate": "pnpm --filter @bigbites/api prisma:migrate",
+    "db:seed": "pnpm --filter @bigbites/api prisma:seed",
+    "db:push": "pnpm --filter @bigbites/api prisma:push",
+    "lint": "pnpm -r run lint"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.0"
+}
