@@ -83,8 +83,6 @@ body {
 .btn-ink:active {
   transform: scale(0.98);
 }
-  transform: scale(0.98);
-}
 
 .scrollbar-none {
   -ms-overflow-style: none;
