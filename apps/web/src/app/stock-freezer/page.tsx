@@ -24,23 +24,25 @@ export default function StockFreezerPage() {
   }, []);
 
   return (
-    <div className="bg-frost-50">
-      <div className="relative h-[38vh] min-h-[240px] overflow-hidden md:h-[44vh]">
-        <Image
-          src="/images/mode-frozen.jpg"
-          alt=""
-          fill
-          priority
-          quality={70}
-          className="hero-kenburns object-cover"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-frost-900 via-frost-900/55 to-frost-900/25" />
-        <div className="absolute inset-x-0 bottom-0 mx-auto max-w-6xl px-5 pb-10">
-          <p className="hero-rise text-[11px] font-bold uppercase tracking-[0.3em] text-frost-200">Scheduled</p>
-          <h1 className="hero-brand mt-2 font-display text-5xl text-white md:text-6xl">Stock Your Freezer</h1>
-          <p className="hero-rise mt-3 max-w-md text-white/80" style={{ animationDelay: '0.28s' }}>
-            Pack sizes, weight, and bulk reorders — delivery when you want it.
+    <div className="bg-[#1B042C]">
+      <div className="relative h-[38vh] min-h-[240px] overflow-hidden md:h-[42vh] bg-gradient-to-b from-[#120220] via-[#24073D] to-[#1B042C]">
+        <div className="absolute inset-0">
+          <Image
+            src="/images/mode-frozen.jpg"
+            alt="Stock Your Freezer"
+            fill
+            priority
+            quality={70}
+            className="hero-kenburns object-cover opacity-25"
+            sizes="100vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1B042C] via-[#1B042C]/75 to-transparent" />
+        </div>
+        <div className="relative mx-auto flex h-full max-w-6xl flex-col justify-end px-5 pb-8">
+          <p className="hero-rise text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">Scheduled Pantry Stock-Up</p>
+          <h1 className="hero-brand mt-1 font-display text-4xl sm:text-5xl text-white font-black">Stock Your Freezer</h1>
+          <p className="hero-rise mt-2 max-w-md text-xs sm:text-sm text-purple-200/80">
+            Bulk samosa packs, rolls, chicken patties, nuggets & kababs — ready to fry anytime.
           </p>
         </div>
       </div>

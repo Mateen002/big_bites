@@ -18,16 +18,12 @@ export function CategoryStrip({
   const pathname = usePathname();
   const activeAll = pathname === allHref;
   const accent =
-    tone === 'hot'
-      ? 'bg-chili-500 text-white'
-      : 'bg-frost-600 text-white';
+    'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-purple-950 font-black rounded-xl shadow-md shadow-amber-500/20';
   const idle =
-    tone === 'hot'
-      ? 'bg-paper-warm text-ink-soft hover:bg-paper-deep'
-      : 'bg-frost-50 text-ink-soft hover:bg-frost-100';
+    'bg-[#220738] text-amber-200/80 hover:bg-[#2c0948] hover:text-amber-300 border border-amber-400/20 rounded-xl';
 
   return (
-    <div className="sticky top-[4.25rem] z-20 -mx-5 mb-8 border-b border-ink/6 bg-paper px-5 md:top-[4.75rem]">
+    <div className="sticky top-[4.25rem] z-20 -mx-5 mb-8 border-b border-amber-400/15 bg-[#1B042C]/90 backdrop-blur-md px-5 md:top-[4.75rem]">
       <div className="flex gap-2 overflow-x-auto py-3 scrollbar-none">
         <Link
           href={allHref}
