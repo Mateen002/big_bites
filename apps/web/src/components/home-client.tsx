@@ -19,44 +19,85 @@ export function HomeClient({
 }) {
   return (
     <>
-      <section className="relative min-h-[100svh] overflow-hidden">
-        <div className="absolute inset-0">
-          <Image
-            src="/images/hero-karahi.jpg"
-            alt="Sizzling karahi"
-            fill
-            priority
-            quality={75}
-            className="hero-kenburns object-cover object-center"
-            sizes="100vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-ink/25" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_30%,rgba(214,54,31,0.25),transparent_55%)]" />
+      <section className="relative min-h-[92svh] overflow-hidden bg-gradient-to-b from-[#120220] via-[#20073B] to-[#150326] flex items-center pt-24 pb-16">
+        {/* Ambient gold & purple lighting */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-amber-500/10 blur-[120px]" />
+          <div className="absolute top-1/2 -right-32 h-96 w-96 rounded-full bg-purple-600/20 blur-[130px]" />
+          <div className="absolute -bottom-20 left-1/3 h-80 w-80 rounded-full bg-amber-400/10 blur-[100px]" />
         </div>
 
-        <div className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-16 pt-28 md:pb-24 md:pt-32">
-          <p className="hero-rise mb-4 text-[11px] font-semibold uppercase tracking-[0.35em] text-mustard-300">
-            Made in Lahore
-          </p>
-          <h1 className="hero-brand font-display text-[clamp(3.4rem,12vw,8.5rem)] font-semibold leading-[0.88] tracking-tight text-white">
-            BigBites
-          </h1>
-          <p
-            className="hero-rise mt-6 max-w-md text-base leading-relaxed text-white/85 md:text-lg"
-            style={{ animationDelay: '0.28s' }}
-          >
-            Hot karahi tonight — or pack the freezer for the week. One kitchen, two ways to eat.
-          </p>
-          <div
-            className="hero-rise mt-9 flex flex-wrap gap-3"
-            style={{ animationDelay: '0.42s' }}
-          >
-            <Link href="/order-now" className="btn-primary cta-pulse">
-              Order Now
-            </Link>
-            <Link href="/stock-freezer" className="btn-secondary">
-              Stock Your Freezer
-            </Link>
+        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 lg:grid-cols-12 w-full">
+          {/* Left Text / Branding Column */}
+          <div className="lg:col-span-7 flex flex-col items-start">
+            {/* Official BigBites Logo */}
+            <div className="hero-rise mb-3 inline-block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo.png"
+                alt="BigBites — Good Food, Big Mood"
+                className="h-24 sm:h-32 md:h-40 w-auto object-contain drop-shadow-[0_8px_30px_rgba(245,184,0,0.4)]"
+              />
+            </div>
+
+            <div className="hero-rise flex items-center gap-2 rounded-full border border-amber-400/30 bg-purple-950/60 px-3.5 py-1 text-xs font-semibold text-amber-300 backdrop-blur-sm">
+              <span>⭐</span>
+              <span>Good Food, Big Mood · Har Bite Ek Naya Taste!</span>
+            </div>
+
+            <h1 className="hero-brand mt-4 font-display text-4xl sm:text-5xl md:text-6xl font-black leading-tight tracking-tight text-white">
+              Lahore&apos;s Sizzling Desi, <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500">Fast Food</span> & Pantry Packs
+            </h1>
+
+            <p
+              className="hero-rise mt-4 max-w-lg text-sm sm:text-base leading-relaxed text-purple-200/80"
+              style={{ animationDelay: '0.2s' }}
+            >
+              Freshly made with love in Gulberg III. Enjoy hot Karahi, Wraps, Burgers and Paratha Rolls tonight — or stock your freezer with ready-to-fry snack packs.
+            </p>
+
+            <div
+              className="hero-rise mt-7 flex flex-wrap items-center gap-3.5"
+              style={{ animationDelay: '0.35s' }}
+            >
+              <Link href="/order-now" className="btn-primary cta-pulse flex items-center gap-2">
+                <span>🛵</span> Order Hot & Fast
+              </Link>
+              <Link href="/stock-freezer" className="btn-secondary flex items-center gap-2">
+                <span>❄️</span> Stock Your Freezer
+              </Link>
+            </div>
+
+            <div className="mt-8 flex items-center gap-6 text-xs text-purple-300/70 border-t border-amber-400/15 pt-4">
+              <div className="flex items-center gap-1.5">
+                <span className="text-amber-400">✓</span> Hot Cooked To Order
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-amber-400">✓</span> 27+ Lahore Areas
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-amber-400">✓</span> Free Sada Roti Deals
+              </div>
+            </div>
+          </div>
+
+          {/* Right Hero Food Imagery */}
+          <div className="lg:col-span-5 flex justify-center relative">
+            <div className="relative w-full max-w-md">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/menu-assets/hero-burger.png"
+                alt="BigBites Gourmet Burgers & Fries"
+                className="w-full h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.6)] animate-float"
+              />
+              <div className="absolute -bottom-4 right-2 rounded-2xl border border-amber-400/40 bg-[#25083E]/95 p-3.5 shadow-2xl backdrop-blur-md">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-amber-400">
+                  BigBites Central Kitchen
+                </p>
+                <p className="text-xs font-semibold text-white">Main Boulevard, Gulberg III</p>
+                <p className="mt-0.5 text-[10px] text-purple-200/70">📞 0310-4460048 · 0317-0850048</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>

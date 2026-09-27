@@ -7,8 +7,9 @@
 :root {
   --font-fraunces: 'Fraunces', Georgia, serif;
   --font-dm-sans: 'DM Sans', system-ui, sans-serif;
-  --paper: #fff8f2;
-  --ink: #1a110c;
+  --paper: #1B042C;
+  --ink: #FFFFFF;
+  --gold: #F5B800;
   --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-soft: cubic-bezier(0.33, 1, 0.68, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -23,27 +24,29 @@ html {
 }
 
 body {
-  @apply bg-paper text-ink font-sans antialiased;
+  @apply bg-[#1B042C] text-white font-sans antialiased;
+  background-color: #1B042C;
+  color: #FFFFFF;
 }
 
 ::selection {
-  background: #d6361f;
-  color: #fff8f2;
+  background: #F5B800;
+  color: #1B042C;
 }
 
 .skeleton {
-  @apply relative overflow-hidden rounded-md bg-paper-deep;
+  @apply relative overflow-hidden rounded-md bg-[#25083D];
 }
 
 .skeleton::after {
   content: '';
   @apply absolute inset-0 -translate-x-full;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  background: linear-gradient(90deg, transparent, rgba(245, 184, 0, 0.15), transparent);
   animation: shimmer 1.4s infinite;
 }
 
 .btn-primary {
-  @apply inline-flex items-center justify-center bg-chili-500 px-7 py-3.5 text-sm font-bold tracking-wide text-white hover:bg-chili-400;
+  @apply inline-flex items-center justify-center bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 px-7 py-3.5 text-sm font-black tracking-wide text-purple-950 hover:brightness-110 shadow-lg shadow-amber-500/25 rounded-xl;
   transition:
     background-color var(--dur-fast) ease,
     transform var(--dur-med) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
@@ -52,7 +55,7 @@ body {
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 28px -12px rgba(214, 54, 31, 0.65);
+  box-shadow: 0 10px 28px -12px rgba(245, 184, 0, 0.65);
 }
 
 .btn-primary:active {
@@ -60,7 +63,7 @@ body {
 }
 
 .btn-secondary {
-  @apply inline-flex items-center justify-center border-2 border-white/80 bg-transparent px-7 py-3.5 text-sm font-bold tracking-wide text-white transition duration-200 hover:bg-white hover:text-ink;
+  @apply inline-flex items-center justify-center border-2 border-amber-400/80 bg-purple-950/60 backdrop-blur-sm px-7 py-3.5 text-sm font-bold tracking-wide text-amber-300 transition duration-200 hover:bg-amber-400 hover:text-purple-950 rounded-xl;
   transition-property: background-color, color, transform, border-color;
 }
 
@@ -73,11 +76,13 @@ body {
 }
 
 .btn-ink {
-  @apply inline-flex items-center justify-center bg-ink px-7 py-3.5 text-sm font-bold tracking-wide text-paper transition duration-200 hover:bg-chili-500;
+  @apply inline-flex items-center justify-center bg-[#2E0A4B] border border-amber-400/30 px-7 py-3.5 text-sm font-bold tracking-wide text-amber-300 transition duration-200 hover:bg-amber-400 hover:text-purple-950 rounded-xl;
   transition-property: background-color, transform;
 }
 
 .btn-ink:active {
+  transform: scale(0.98);
+}
   transform: scale(0.98);
 }
 

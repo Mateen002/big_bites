@@ -160,47 +160,44 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
     <>
       <header className="fixed inset-x-0 top-0 z-40 px-3 pt-3 md:px-5 md:pt-4">
         <div
-          className={`mx-auto flex max-w-6xl items-center gap-2 transition-all duration-300 md:gap-3 ${
+          className={`mx-auto flex max-w-6xl items-center gap-2 transition-all duration-300 md:gap-3 rounded-2xl ${
             solid
-              ? 'border border-ink/8 bg-paper px-3 py-2 shadow-lift md:px-4'
-              : 'bg-transparent px-1 py-1'
+              ? 'border border-amber-400/25 bg-[#1B042C]/95 px-3 py-2 shadow-2xl shadow-black/40 backdrop-blur-md md:px-4'
+              : 'border border-amber-400/20 bg-[#1B042C]/80 px-3 py-2 backdrop-blur-md shadow-xl'
           }`}
         >
           <Link
             href="/"
-            className={`shrink-0 font-display text-xl font-semibold tracking-tight md:text-2xl ${
-              lightOnDark ? 'text-white' : 'text-ink'
-            }`}
+            className="flex items-center gap-2 shrink-0 group py-0.5"
+            title="BigBites — Good Food, Big Mood"
           >
-            BigBites
+            {/* Official BigBites Logo */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="BigBites — Good Food, Big Mood"
+              className="h-11 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_2px_8px_rgba(245,184,0,0.35)]"
+            />
           </Link>
 
           {/* Mode switch — desktop */}
-          <div
-            className={`ml-2 hidden items-center p-1 md:flex ${
-              lightOnDark ? 'bg-white/15' : 'bg-ink/5'
-            }`}
-          >
+          <div className="ml-3 hidden items-center gap-1 rounded-xl border border-amber-400/20 bg-purple-950/60 p-1 md:flex">
             <Link
               href="/order-now"
-              className={`px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition ${
+              className={`rounded-lg px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition ${
                 modeOrder
-                  ? 'bg-chili-500 text-white'
-                  : lightOnDark
-                    ? 'text-white/75 hover:text-white'
-                    : 'text-ink-mute hover:text-ink'
+                  ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-purple-950 shadow-sm'
+                  : 'text-amber-200/80 hover:bg-amber-400/10 hover:text-amber-300'
               }`}
             >
               Order Now
             </Link>
             <Link
               href="/stock-freezer"
-              className={`px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition ${
+              className={`rounded-lg px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition ${
                 modeFreeze
-                  ? 'bg-frost-600 text-white'
-                  : lightOnDark
-                    ? 'text-white/75 hover:text-white'
-                    : 'text-ink-mute hover:text-ink'
+                  ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-purple-950 shadow-sm'
+                  : 'text-amber-200/80 hover:bg-amber-400/10 hover:text-amber-300'
               }`}
             >
               Freezer
@@ -306,19 +303,15 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className={`relative flex items-center gap-2 px-3 py-2 text-sm font-bold transition ${
-              lightOnDark
-                ? 'bg-white text-ink hover:bg-mustard-300'
-                : 'bg-ink text-paper hover:bg-chili-500'
-            }`}
+            className="relative flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 px-3.5 py-2 text-sm font-black text-purple-950 transition hover:brightness-110 shadow-md shadow-amber-500/20 active:scale-95"
             aria-label="Open cart"
           >
             <CartIcon className="h-4 w-4" />
             <span className="hidden sm:inline">Cart</span>
             <span
-              className={`flex h-5 min-w-5 items-center justify-center px-1 text-[11px] ${
-                lightOnDark ? 'bg-chili-500 text-white' : 'bg-mustard-400 text-ink'
-              } ${cartBump ? 'cart-bump' : ''}`}
+              className={`flex h-5 min-w-5 items-center justify-center rounded-full bg-purple-950 px-1 text-[11px] font-black text-amber-300 ${
+                cartBump ? 'cart-bump' : ''
+              }`}
             >
               <AnimatedNumber value={cart.itemCount} />
             </span>
@@ -326,9 +319,7 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
 
           <button
             type="button"
-            className={`flex h-10 w-10 items-center justify-center md:hidden ${
-              lightOnDark ? 'text-white' : 'text-ink'
-            }`}
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-amber-300 hover:bg-amber-400/10 md:hidden"
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Toggle menu"
           >
@@ -340,27 +331,27 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
       {/* Instant Search Modal */}
       {searchOpen && (
         <div
-          className="fixed inset-0 z-50 flex flex-col bg-ink/65 backdrop-blur-sm p-4 pt-16 sm:p-6 sm:pt-20"
+          className="fixed inset-0 z-50 flex flex-col bg-black/80 backdrop-blur-md p-4 pt-16 sm:p-6 sm:pt-20"
           onClick={() => setSearchOpen(false)}
         >
           <div
-            className="mx-auto w-full max-w-xl rounded-xl border border-ink/10 bg-white p-5 shadow-2xl"
+            className="mx-auto w-full max-w-xl rounded-2xl border border-amber-400/30 bg-[#22073B] p-5 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3 border-b border-ink/10 pb-3">
-              <SearchIcon className="h-5 w-5 text-ink-mute" />
+            <div className="flex items-center gap-3 border-b border-amber-400/20 pb-3">
+              <SearchIcon className="h-5 w-5 text-amber-400" />
               <input
                 type="text"
                 autoFocus
                 placeholder="Search karahi, biryani, burgers, kebab packs…"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full text-base text-ink placeholder:text-ink-mute/60 focus:outline-none"
+                className="w-full text-base bg-transparent text-white placeholder:text-purple-300/50 focus:outline-none"
               />
               <button
                 type="button"
                 onClick={() => setSearchOpen(false)}
-                className="rounded px-2.5 py-1 text-xs font-semibold text-ink-mute hover:bg-paper-deep hover:text-ink"
+                className="rounded-lg px-2.5 py-1 text-xs font-semibold text-amber-300/70 hover:bg-amber-400/10 hover:text-amber-300"
               >
                 ESC
               </button>
