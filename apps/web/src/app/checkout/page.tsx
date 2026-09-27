@@ -23,7 +23,7 @@ export default function CheckoutPage() {
     selectedZone,
     setSelectedZone,
     orderType,
-    openModal: openLocationModal,
+    setOrderType,
   } = useLocation();
   const router = useRouter();
   const [zones, setZones] = useState<DeliveryZone[]>([]);
@@ -240,50 +240,76 @@ export default function CheckoutPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            {/* Delivery Area & Order Method Card */}
-            <div className="rounded-xl border border-stone-200 bg-stone-50/80 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white text-xl shadow-sm">
-                    {orderType === 'DELIVERY' ? '🛵' : '🥡'}
-                  </span>
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-ink-mute">
-                      {orderType === 'DELIVERY' ? 'Delivery Area' : 'Order Method'}
-                    </p>
-                    <p className="text-sm font-bold text-ink">
-                      {orderType === 'DELIVERY'
-                        ? `${activeZone?.name || 'Lahore'} (${formatPkr(activeZone?.feePkr || 0)} · ETA ${activeZone?.etaMinutesMin || 25}–${activeZone?.etaMinutesMax || 45} min)`
-                        : 'Pick-Up at BigBites Lahore Kitchen (Rs 0 Delivery Fee)'}
-                    </p>
-                  </div>
-                </div>
+            {/* Order Method: Delivery vs Pick-Up */}
+            <div className="space-y-3">
+              <label className="text-xs font-semibold uppercase tracking-wider text-ink-mute">
+                Order Type & Location
+              </label>
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={openLocationModal}
-                  className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-bold text-chili-600 shadow-sm transition hover:bg-chili-50 active:scale-95"
+                  onClick={() => setOrderType('DELIVERY')}
+                  className={`flex items-center justify-center gap-2 rounded-xl border p-3 text-sm font-semibold transition ${
+                    orderType === 'DELIVERY'
+                      ? 'border-chili-500 bg-chili-50 text-chili-700 shadow-sm'
+                      : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                  }`}
                 >
-                  Change
+                  <span className="text-base">🛵</span> Delivery
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOrderType('PICKUP')}
+                  className={`flex items-center justify-center gap-2 rounded-xl border p-3 text-sm font-semibold transition ${
+                    orderType === 'PICKUP'
+                      ? 'border-chili-500 bg-chili-50 text-chili-700 shadow-sm'
+                      : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                  }`}
+                >
+                  <span className="text-base">🥡</span> Pick-Up
                 </button>
               </div>
-            </div>
 
-            {orderType === 'DELIVERY' ? (
-              <textarea
-                name="addressLine"
-                required
-                placeholder="Complete street address (House/Flat #, Street #, Sector/Phase, Landmark)"
-                rows={3}
-                className={field}
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-            ) : (
-              <div className="rounded-xl border border-dashed border-stone-300 bg-white p-3.5 text-xs text-stone-700 leading-relaxed">
-                📍 <strong>Pickup Location:</strong> BigBites Lahore Central Kitchen, Main Boulevard, Gulberg III.
-                <p className="mt-1 text-stone-500">Your order will be ready for self pickup in 20–30 minutes.</p>
-              </div>
-            )}
+              {orderType === 'DELIVERY' ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-ink-mute">
+                      Select Area / Society in Lahore
+                    </label>
+                    <select
+                      value={zoneId}
+                      onChange={(e) => {
+                        setZoneId(e.target.value);
+                        const found = zones.find((z) => z.id === e.target.value);
+                        if (found) setSelectedZone(found);
+                      }}
+                      className={field}
+                    >
+                      {zones.map((z) => (
+                        <option key={z.id} value={z.id}>
+                          {z.name} — {formatPkr(z.feePkr)} delivery · {z.etaMinutesMin}–{z.etaMinutesMax} min
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <textarea
+                    name="addressLine"
+                    required
+                    placeholder="Complete street address (House/Flat #, Street #, Sector/Block, Landmark)"
+                    rows={3}
+                    className={field}
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-stone-300 bg-stone-50 p-4 text-xs text-stone-700 leading-relaxed">
+                  📍 <strong>Pickup Point:</strong> BigBites Lahore Central Kitchen, Main Boulevard, Gulberg III.
+                  <p className="mt-1 text-stone-500">Your order will be fresh and ready for self-pickup in 20–30 minutes (Rs 0 delivery fee).</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {hasScheduled && (

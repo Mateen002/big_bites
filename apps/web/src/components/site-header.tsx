@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useCart } from './cart-provider';
 import { useAuth } from './auth-provider';
-import { useLocation } from './location-provider';
 import { AnimatedNumber } from './animated-number';
 import { api, formatPkr, assetUrl, fulfillmentLabel, type Category, type Product } from '@/lib/api';
 
@@ -54,7 +53,6 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
   const catsRef = useRef<HTMLDivElement>(null);
   const { cart, setOpen } = useCart();
   const { user, logout } = useAuth();
-  const { orderType, selectedZone, openModal: openLocationModal } = useLocation();
   const pathname = usePathname();
   const isHome = pathname === '/';
   const [cartBump, setCartBump] = useState(false);
@@ -176,28 +174,6 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
           >
             BigBites
           </Link>
-
-          {/* Location & Order Type Trigger Button */}
-          <button
-            type="button"
-            onClick={openLocationModal}
-            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition ${
-              lightOnDark
-                ? 'bg-white/15 text-white hover:bg-white/25'
-                : 'bg-paper-deep text-ink hover:bg-paper-warm border border-ink/10'
-            }`}
-            title="Click to change delivery area or switch to pickup"
-          >
-            <span className="text-sm">{orderType === 'DELIVERY' ? '🛵' : '🥡'}</span>
-            <span className="max-w-[85px] truncate sm:max-w-[140px]">
-              {orderType === 'DELIVERY'
-                ? selectedZone
-                  ? `${selectedZone.name}`
-                  : 'Select Area'
-                : 'Pick-Up'}
-            </span>
-            <span className="text-[10px] text-chili-500 font-bold underline">Change</span>
-          </button>
 
           {/* Mode switch — desktop */}
           <div

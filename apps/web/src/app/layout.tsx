@@ -3,7 +3,6 @@ import './globals.css';
 import { CartProvider } from '@/components/cart-provider';
 import { AuthProvider } from '@/components/auth-provider';
 import { LocationProvider } from '@/components/location-provider';
-import { LocationModal } from '@/components/location-modal';
 import { FloatingChrome } from '@/components/floating-chrome';
 import { PageTransition } from '@/components/page-transition';
 import { SiteHeader } from '@/components/site-header';
@@ -30,7 +29,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <LocationProvider>
             <CartProvider>
               <SiteHeader categories={categories} />
-              <LocationModal />
               <main className="min-h-screen">
                 <PageTransition>{children}</PageTransition>
               </main>
