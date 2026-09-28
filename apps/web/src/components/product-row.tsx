@@ -9,9 +9,9 @@ export function ProductRow({ product }: { product: Product; index?: number }) {
   return (
     <Link
       href={`/products/${product.slug}`}
-      className="group flex gap-4 border-b border-ink/8 py-4 transition hover:bg-paper-warm/60 md:gap-5 md:py-5"
+      className="group flex gap-4 border-b border-purple-800/40 py-4 transition hover:bg-[#24073B]/60 rounded-xl px-2 md:gap-5 md:py-5"
     >
-      <div className="relative h-24 w-24 shrink-0 overflow-hidden bg-paper-deep md:h-28 md:w-28">
+      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-purple-950 md:h-28 md:w-28">
         {product.image && (
           <Image
             src={assetUrl(product.image)}
@@ -28,20 +28,20 @@ export function ProductRow({ product }: { product: Product; index?: number }) {
           <div className="min-w-0">
             <span
               className={`text-[10px] font-bold uppercase tracking-wider ${
-                hot ? 'text-chili-500' : 'text-frost-600'
+                hot ? 'text-amber-400' : 'text-amber-300'
               }`}
             >
               {fulfillmentLabel(product.category.fulfillmentType)}
             </span>
-            <h3 className="font-display text-lg text-ink transition group-hover:text-chili-500 md:text-xl">
+            <h3 className="font-display text-lg font-bold text-white transition group-hover:text-amber-400 md:text-xl">
               {product.name}
             </h3>
           </div>
-          <p className="shrink-0 pt-4 font-semibold text-ink md:pt-5">{formatPkr(product.pricePkr)}</p>
+          <p className="shrink-0 pt-4 font-bold text-amber-400 text-base md:pt-5 md:text-lg">{formatPkr(product.pricePkr)}</p>
         </div>
-        <p className="mt-1 line-clamp-1 text-sm text-ink-mute md:line-clamp-2">{product.description}</p>
+        <p className="mt-1 line-clamp-1 text-sm text-purple-200/80 md:line-clamp-2">{product.description}</p>
         {product.packSize && (
-          <p className="mt-1 text-xs text-frost-600">
+          <p className="mt-1 text-xs font-semibold text-amber-300/90">
             {[
               product.packSize,
               product.weightGrams ? `${product.weightGrams}g` : null,

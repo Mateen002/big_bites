@@ -68,15 +68,15 @@ export default function StockFreezerPage() {
 
             <div className="mt-14 flex flex-wrap items-end justify-between gap-4">
               <div>
-                <h2 className="font-display text-3xl text-ink">Frozen packs</h2>
-                <p className="mt-1 text-sm text-ink-mute">{products.length} packs available</p>
+                <h2 className="font-display text-3xl font-bold text-white">Frozen packs</h2>
+                <p className="mt-1 text-sm text-purple-200/80">{products.length} packs available</p>
               </div>
-              <div className="flex bg-white p-1">
+              <div className="flex rounded-xl border border-amber-400/25 bg-[#24073B] p-1">
                 <button
                   type="button"
                   onClick={() => setView('grid')}
-                  className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
-                    view === 'grid' ? 'bg-frost-600 text-white' : 'text-ink-mute'
+                  className={`rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition ${
+                    view === 'grid' ? 'bg-amber-400 text-purple-950 shadow-sm' : 'text-purple-200/80 hover:text-white'
                   }`}
                 >
                   Grid
@@ -84,8 +84,8 @@ export default function StockFreezerPage() {
                 <button
                   type="button"
                   onClick={() => setView('list')}
-                  className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
-                    view === 'list' ? 'bg-frost-600 text-white' : 'text-ink-mute'
+                  className={`rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition ${
+                    view === 'list' ? 'bg-amber-400 text-purple-950 shadow-sm' : 'text-purple-200/80 hover:text-white'
                   }`}
                 >
                   List
@@ -100,7 +100,7 @@ export default function StockFreezerPage() {
                 ))}
               </div>
             ) : (
-              <div className="mt-4 border border-ink/8 bg-white px-4 md:px-5">
+              <div className="mt-4 rounded-2xl border border-amber-400/20 bg-[#24073B] p-4 md:p-5">
                 {products.map((p) => (
                   <ProductRow key={p.id} product={p} />
                 ))}

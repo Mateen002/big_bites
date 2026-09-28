@@ -63,8 +63,8 @@ export default function OrderNowPage() {
         ) : (
           <>
             <div>
-              <h2 className="font-display text-3xl text-ink">Browse by category</h2>
-              <p className="mt-1 text-sm text-ink-mute">Pick a kitchen lane, then customize your dish.</p>
+              <h2 className="font-display text-3xl font-bold text-white">Browse by category</h2>
+              <p className="mt-1 text-sm text-purple-200/80">Pick a kitchen lane, then customize your dish.</p>
             </div>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {categories.map((c, i) => (
@@ -74,15 +74,15 @@ export default function OrderNowPage() {
 
             <div className="mt-14 flex flex-wrap items-end justify-between gap-4">
               <div>
-                <h2 className="font-display text-3xl text-ink">Full menu</h2>
-                <p className="mt-1 text-sm text-ink-mute">{products.length} dishes ready to order</p>
+                <h2 className="font-display text-3xl font-bold text-white">Full menu</h2>
+                <p className="mt-1 text-sm text-purple-200/80">{products.length} dishes ready to order</p>
               </div>
-              <div className="flex bg-ink/5 p-1">
+              <div className="flex rounded-xl border border-amber-400/25 bg-[#24073B] p-1">
                 <button
                   type="button"
                   onClick={() => setView('grid')}
-                  className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
-                    view === 'grid' ? 'bg-ink text-paper' : 'text-ink-mute'
+                  className={`rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition ${
+                    view === 'grid' ? 'bg-amber-400 text-purple-950 shadow-sm' : 'text-purple-200/80 hover:text-white'
                   }`}
                 >
                   Grid
@@ -90,8 +90,8 @@ export default function OrderNowPage() {
                 <button
                   type="button"
                   onClick={() => setView('list')}
-                  className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
-                    view === 'list' ? 'bg-ink text-paper' : 'text-ink-mute'
+                  className={`rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition ${
+                    view === 'list' ? 'bg-amber-400 text-purple-950 shadow-sm' : 'text-purple-200/80 hover:text-white'
                   }`}
                 >
                   List

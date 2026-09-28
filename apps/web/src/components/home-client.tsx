@@ -159,7 +159,7 @@ export function HomeClient({
             <h2 className="mt-3 font-display text-4xl leading-tight text-white md:text-5xl">
               What&apos;s cooking hot
             </h2>
-            <p className="mt-4 text-ink-mute">
+            <p className="mt-4 text-purple-200/80">
               Real BigBites menu — desi, fast food, and fried, ready to order now.
             </p>
           </Reveal>
@@ -221,12 +221,12 @@ export function HomeClient({
         </div>
       </section>
 
-      <section id="stock-freezer" className="scroll-section relative overflow-hidden bg-frost-900 py-20 text-white md:py-28">
+      <section id="stock-freezer" className="scroll-section relative overflow-hidden bg-[#130222] py-20 text-white md:py-28">
         <div className="relative mx-auto max-w-6xl px-5">
           <Reveal className="max-w-xl">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-frost-200">Stock up</p>
-            <h2 className="mt-3 font-display text-4xl leading-tight md:text-5xl">Your freezer, sorted</h2>
-            <p className="mt-4 text-frost-100/80">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">Stock up</p>
+            <h2 className="mt-3 font-display text-4xl font-bold leading-tight text-white md:text-5xl">Your freezer, sorted</h2>
+            <p className="mt-4 text-base text-purple-200/90">
               Pack size, weight, pieces per pack — scheduled delivery across Lahore. No rush.
             </p>
           </Reveal>
@@ -236,7 +236,7 @@ export function HomeClient({
               <Reveal key={c.id} variant="left" className="lg:col-span-5">
                 <Link
                   href={`/categories/${c.slug}`}
-                  className="group relative block min-h-[380px] overflow-hidden md:min-h-[480px]"
+                  className="group relative block min-h-[380px] overflow-hidden rounded-2xl md:min-h-[480px]"
                 >
                   {c.image && (
                     <Image
@@ -249,10 +249,10 @@ export function HomeClient({
                       sizes="(max-width:1024px) 100vw, 42vw"
                     />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-frost-900 via-frost-900/40 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#140224]/95 via-[#1B042C]/40 to-transparent" />
                   <div className="absolute bottom-0 p-7 transition duration-500 group-hover:translate-y-[-6px]">
-                    <h3 className="font-display text-3xl">{c.name}</h3>
-                    <p className="mt-2 text-sm text-frost-100/80">{c.description}</p>
+                    <h3 className="font-display text-3xl font-bold text-white">{c.name}</h3>
+                    <p className="mt-2 text-sm text-purple-200/90">{c.description}</p>
                   </div>
                 </Link>
               </Reveal>
@@ -262,9 +262,9 @@ export function HomeClient({
                 <Reveal key={p.id} delay={i * 80} variant="right">
                   <Link
                     href={`/products/${p.slug}`}
-                    className="group flex gap-4 border border-white/10 bg-white/5 p-4 transition duration-300 hover:-translate-y-1 hover:border-frost-200/40 hover:bg-white/10 md:gap-6 md:p-5"
+                    className="group flex gap-4 rounded-2xl border border-amber-400/20 bg-[#24073B] p-4 transition duration-300 hover:-translate-y-1 hover:border-amber-400/50 hover:bg-[#2c0948] md:gap-6 md:p-5"
                   >
-                    <div className="relative h-28 w-28 shrink-0 overflow-hidden md:h-36 md:w-36">
+                    <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl md:h-36 md:w-36">
                       {p.image && (
                         <Image
                           src={assetUrl(p.image)}
@@ -278,21 +278,21 @@ export function HomeClient({
                       )}
                     </div>
                     <div className="flex flex-1 flex-col justify-center">
-                      <h3 className="font-display text-xl text-white md:text-2xl">{p.name}</h3>
-                      <p className="mt-1 line-clamp-2 text-sm text-frost-100/70">{p.description}</p>
-                      <p className="mt-2 text-xs text-frost-200">
+                      <h3 className="font-display text-xl font-bold text-white md:text-2xl">{p.name}</h3>
+                      <p className="mt-1 line-clamp-2 text-sm text-purple-200/90">{p.description}</p>
+                      <p className="mt-2 text-xs font-semibold text-amber-300/90">
                         {[p.packSize, p.weightGrams ? `${p.weightGrams}g` : null, p.piecesPerPack ? `${p.piecesPerPack} pcs` : null]
                           .filter(Boolean)
                           .join(' · ')}
                       </p>
-                      <p className="mt-3 font-semibold text-mustard-300">{formatPkr(p.pricePkr)}</p>
+                      <p className="mt-3 font-extrabold text-amber-400 text-lg">{formatPkr(p.pricePkr)}</p>
                     </div>
                   </Link>
                 </Reveal>
               ))}
               <Reveal delay={240}>
-                <Link href="/stock-freezer" className="btn-primary self-start bg-frost-400 text-frost-900 hover:bg-frost-200">
-                  All frozen packs
+                <Link href="/stock-freezer" className="btn-primary self-start">
+                  All frozen packs →
                 </Link>
               </Reveal>
             </div>

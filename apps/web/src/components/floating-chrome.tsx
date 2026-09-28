@@ -55,19 +55,19 @@ export function FloatingChrome() {
 
       {/* Mobile Sticky Bottom Checkout Bar */}
       {!hideChrome && cart.itemCount > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-ink/10 bg-white/95 px-4 py-3 shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.1)] backdrop-blur md:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-amber-400/30 bg-[#24073B]/95 px-4 py-3 shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.5)] backdrop-blur-md md:hidden">
           <div className="mx-auto flex max-w-md items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => setOpen(true)}
               className="flex items-center gap-2.5 text-left"
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-chili-500 text-xs font-bold text-white">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-xs font-black text-purple-950 shadow-sm">
                 <AnimatedNumber value={cart.itemCount} />
               </span>
               <div>
-                <p className="text-[11px] font-medium text-ink-mute uppercase tracking-wider">Cart Total</p>
-                <p className="text-sm font-bold text-ink">{formatPkr(cart.subtotalPkr)}</p>
+                <p className="text-[11px] font-semibold text-purple-200/80 uppercase tracking-wider">Cart Total</p>
+                <p className="text-sm font-extrabold text-amber-400">{formatPkr(cart.subtotalPkr)}</p>
               </div>
             </button>
 
@@ -75,13 +75,13 @@ export function FloatingChrome() {
               <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="rounded-md border border-ink/15 px-3 py-2 text-xs font-semibold text-ink transition hover:bg-paper-deep"
+                className="rounded-xl border border-amber-400/30 bg-[#1C0430] px-3.5 py-2 text-xs font-bold text-amber-300 transition hover:bg-amber-400 hover:text-purple-950"
               >
                 Cart
               </button>
               <Link
                 href="/checkout"
-                className="rounded-md bg-chili-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-chili-600"
+                className="rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-2 text-xs font-black text-purple-950 shadow-md shadow-amber-400/20"
               >
                 Checkout →
               </Link>
