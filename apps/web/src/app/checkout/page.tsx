@@ -165,14 +165,14 @@ export default function CheckoutPage() {
   }
 
   const field =
-    'w-full rounded-md border border-ink/15 bg-white px-4 py-3 text-sm text-ink placeholder:text-ink-mute/60 focus:border-chili-500 focus:outline-none transition';
+    'w-full rounded-xl border border-amber-400/30 bg-[#25083E] px-4 py-3 text-sm text-white placeholder:text-purple-300/40 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition';
 
   if (!cart.items.length) {
     return (
       <div className="mx-auto max-w-lg px-5 py-28 text-center">
-        <h1 className="font-display text-3xl text-ink">Cart is empty</h1>
-        <p className="mt-2 text-sm text-ink-mute">Add sizzling dishes or stock your freezer first.</p>
-        <Link href="/order-now" className="btn-primary mt-6">
+        <h1 className="font-display text-3xl font-bold text-white">Cart is empty</h1>
+        <p className="mt-2 text-sm text-purple-200/70">Add sizzling dishes or stock your freezer first.</p>
+        <Link href="/order-now" className="btn-primary mt-6 inline-block">
           Browse menu →
         </Link>
       </div>
@@ -180,21 +180,21 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="bg-paper pt-20">
+    <div className="bg-[#1B042C] pt-20">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-12 lg:grid-cols-5">
-        <form onSubmit={onSubmit} className="space-y-5 lg:col-span-3">
+        <form onSubmit={onSubmit} className="space-y-6 lg:col-span-3">
           <div>
-            <h1 className="font-display text-4xl text-ink">Checkout</h1>
-            <p className="mt-1 text-sm text-ink-mute">Fast delivery throughout Lahore.</p>
+            <h1 className="font-display text-4xl font-bold text-white">Checkout</h1>
+            <p className="mt-1 text-sm text-purple-200/70">Fast delivery throughout Lahore.</p>
           </div>
 
           {!authLoading && !user && (
-            <div className="rounded-lg border border-ink/10 bg-paper-warm p-4 text-sm text-ink-soft">
-              <Link href="/login?next=/checkout" className="font-semibold text-chili-500 hover:underline">
+            <div className="rounded-xl border border-amber-400/20 bg-[#24073B] p-4 text-sm text-purple-200/90 shadow-md">
+              <Link href="/login?next=/checkout" className="font-bold text-amber-400 hover:underline">
                 Sign in
               </Link>{' '}
               or{' '}
-              <Link href="/signup?next=/checkout" className="font-semibold text-chili-500 hover:underline">
+              <Link href="/signup?next=/checkout" className="font-bold text-amber-400 hover:underline">
                 create an account
               </Link>{' '}
               to track your orders automatically. Guest checkout is always available.
@@ -202,9 +202,9 @@ export default function CheckoutPage() {
           )}
 
           {hasHot && hasScheduled && (
-            <div className="rounded-lg border border-mustard-400 bg-mustard-50/60 p-4 text-sm text-ink">
-              <p className="font-semibold text-amber-900">📦 Mixed Order Notice</p>
-              <p className="mt-1 text-xs leading-relaxed text-amber-800">
+            <div className="rounded-xl border border-amber-400/40 bg-amber-500/10 p-4 text-sm text-amber-200 shadow-md">
+              <p className="font-bold text-amber-300">📦 Mixed Order Notice</p>
+              <p className="mt-1 text-xs leading-relaxed text-amber-200/80">
                 Your cart has both <strong>Hot & Fast</strong> items and <strong>Stock Freezer</strong> packs.
                 Your hot food is prepared right away, and your frozen packs will be delivered in the chosen
                 schedule below.
@@ -212,8 +212,8 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          <div className="space-y-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-mute">1. Delivery Contact</h2>
+          <div className="space-y-4 rounded-2xl border border-amber-400/20 bg-[#24073B] p-5 shadow-xl">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-amber-400">1. Delivery Contact</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               <input
                 name="customerName"
@@ -241,18 +241,18 @@ export default function CheckoutPage() {
               onChange={(e) => setEmail(e.target.value)}
             />
             {/* Order Method: Delivery vs Pick-Up */}
-            <div className="space-y-3">
-              <label className="text-xs font-semibold uppercase tracking-wider text-ink-mute">
+            <div className="space-y-3 pt-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-amber-400">
                 Order Type & Location
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setOrderType('DELIVERY')}
-                  className={`flex items-center justify-center gap-2 rounded-xl border p-3 text-sm font-semibold transition ${
+                  className={`flex items-center justify-center gap-2 rounded-xl border py-3 text-xs font-bold transition ${
                     orderType === 'DELIVERY'
-                      ? 'border-chili-500 bg-chili-50 text-chili-700 shadow-sm'
-                      : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                      ? 'border-amber-400 bg-amber-400 text-purple-950 shadow-md shadow-amber-400/20'
+                      : 'border-amber-400/30 bg-[#1C0430] text-purple-200/80 hover:border-amber-400/60'
                   }`}
                 >
                   <span className="text-base">🛵</span> Delivery
@@ -260,10 +260,10 @@ export default function CheckoutPage() {
                 <button
                   type="button"
                   onClick={() => setOrderType('PICKUP')}
-                  className={`flex items-center justify-center gap-2 rounded-xl border p-3 text-sm font-semibold transition ${
+                  className={`flex items-center justify-center gap-2 rounded-xl border py-3 text-xs font-bold transition ${
                     orderType === 'PICKUP'
-                      ? 'border-chili-500 bg-chili-50 text-chili-700 shadow-sm'
-                      : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                      ? 'border-amber-400 bg-amber-400 text-purple-950 shadow-md shadow-amber-400/20'
+                      : 'border-amber-400/30 bg-[#1C0430] text-purple-200/80 hover:border-amber-400/60'
                   }`}
                 >
                   <span className="text-base">🥡</span> Pick-Up
@@ -271,9 +271,9 @@ export default function CheckoutPage() {
               </div>
 
               {orderType === 'DELIVERY' ? (
-                <div className="space-y-3">
+                <div className="space-y-3 pt-2">
                   <div>
-                    <label className="mb-1 block text-xs font-semibold text-ink-mute">
+                    <label className="mb-1 block text-xs font-semibold text-purple-200/80">
                       Select Area / Society in Lahore
                     </label>
                     <select
@@ -283,10 +283,10 @@ export default function CheckoutPage() {
                         const found = zones.find((z) => z.id === e.target.value);
                         if (found) setSelectedZone(found);
                       }}
-                      className={field}
+                      className={`${field} cursor-pointer`}
                     >
                       {zones.map((z) => (
-                        <option key={z.id} value={z.id}>
+                        <option key={z.id} value={z.id} className="bg-[#24073B] text-white">
                           {z.name} — {formatPkr(z.feePkr)} delivery · {z.etaMinutesMin}–{z.etaMinutesMax} min
                         </option>
                       ))}
@@ -304,51 +304,51 @@ export default function CheckoutPage() {
                   />
                 </div>
               ) : (
-                <div className="rounded-xl border border-dashed border-stone-300 bg-stone-50 p-4 text-xs text-stone-700 leading-relaxed">
-                  📍 <strong>Pickup Point:</strong> BigBites Lahore Central Kitchen, Main Boulevard, Gulberg III.
-                  <p className="mt-1 text-stone-500">Your order will be fresh and ready for self-pickup in 20–30 minutes (Rs 0 delivery fee).</p>
+                <div className="rounded-xl border border-dashed border-amber-400/40 bg-[#1C0430] p-4 text-xs text-purple-200 leading-relaxed">
+                  📍 <strong className="text-amber-300">Pickup Point:</strong> BigBites Lahore Central Kitchen, Main Boulevard, Gulberg III.
+                  <p className="mt-1 text-purple-300/70">Your order will be fresh and ready for self-pickup in 20–30 minutes (Rs 0 delivery fee).</p>
                 </div>
               )}
             </div>
           </div>
 
           {hasScheduled && (
-            <div className="space-y-3 rounded-lg border border-frost-200 bg-frost-50/50 p-4">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-frost-900">
+            <div className="space-y-3 rounded-2xl border border-amber-400/20 bg-[#24073B] p-5 shadow-xl">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-amber-400">
                 2. Frozen Delivery Time Slot
               </h2>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs text-ink-mute">Delivery Day</label>
+                  <label className="mb-1 block text-xs text-purple-200/80 font-medium">Delivery Day</label>
                   <select
                     value={slotDay}
                     onChange={(e) => setSlotDay(e.target.value)}
-                    className={field}
+                    className={`${field} cursor-pointer`}
                   >
-                    <option value="today">Today</option>
-                    <option value="tomorrow">Tomorrow (Recommended)</option>
-                    <option value="day_after">Day after tomorrow</option>
+                    <option value="today" className="bg-[#24073B] text-white">Today</option>
+                    <option value="tomorrow" className="bg-[#24073B] text-white">Tomorrow (Recommended)</option>
+                    <option value="day_after" className="bg-[#24073B] text-white">Day after tomorrow</option>
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs text-ink-mute">Preferred Window</label>
+                  <label className="mb-1 block text-xs text-purple-200/80 font-medium">Preferred Window</label>
                   <select
                     value={slotTime}
                     onChange={(e) => setSlotTime(e.target.value)}
-                    className={field}
+                    className={`${field} cursor-pointer`}
                   >
-                    <option value="lunch">Lunch (12:30 PM – 2:30 PM)</option>
-                    <option value="afternoon">Afternoon (3:30 PM – 6:00 PM)</option>
-                    <option value="dinner">Dinner (7:30 PM – 10:00 PM)</option>
+                    <option value="lunch" className="bg-[#24073B] text-white">Lunch (12:30 PM – 2:30 PM)</option>
+                    <option value="afternoon" className="bg-[#24073B] text-white">Afternoon (3:30 PM – 6:00 PM)</option>
+                    <option value="dinner" className="bg-[#24073B] text-white">Dinner (7:30 PM – 10:00 PM)</option>
                   </select>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="space-y-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-mute">Payment Method</h2>
-            <div className="grid gap-2 sm:grid-cols-2">
+          <div className="space-y-4 rounded-2xl border border-amber-400/20 bg-[#24073B] p-5 shadow-xl">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-amber-400">3. Payment Method</h2>
+            <div className="grid gap-2.5 sm:grid-cols-2">
               {[
                 ['COD', 'Cash on Delivery', 'Pay cash when rider arrives'],
                 ['JAZZCASH', 'JazzCash', 'Mobile account or card sandbox'],
@@ -357,10 +357,10 @@ export default function CheckoutPage() {
               ].map(([value, label, desc]) => (
                 <label
                   key={value}
-                  className={`flex cursor-pointer flex-col rounded-lg border p-3.5 transition ${
+                  className={`flex cursor-pointer flex-col rounded-xl border p-3.5 transition ${
                     paymentMethod === value
-                      ? 'border-chili-500 bg-chili-50/20 ring-1 ring-chili-500'
-                      : 'border-ink/10 bg-white hover:border-ink/25'
+                      ? 'border-amber-400 bg-amber-400/15 ring-1 ring-amber-400 shadow-md shadow-amber-400/10'
+                      : 'border-purple-800/40 bg-[#1C0430] hover:border-amber-400/30'
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -370,38 +370,38 @@ export default function CheckoutPage() {
                       value={value}
                       checked={paymentMethod === value}
                       onChange={() => setPaymentMethod(value)}
-                      className="text-chili-500"
+                      className="accent-amber-400"
                     />
-                    <span className="font-semibold text-ink text-sm">{label}</span>
+                    <span className="font-semibold text-white text-sm">{label}</span>
                   </div>
-                  <span className="mt-1 pl-5 text-xs text-ink-mute">{desc}</span>
+                  <span className="mt-1 pl-5 text-xs text-purple-200/70">{desc}</span>
                 </label>
               ))}
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-ink-mute">Promo Code</label>
+          <div className="space-y-2 rounded-2xl border border-amber-400/20 bg-[#24073B] p-5 shadow-xl">
+            <label className="block text-xs font-bold uppercase tracking-wider text-amber-400">Promo Code</label>
             <div className="flex gap-2">
               <input
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value)}
                 placeholder="Enter coupon code"
-                className={`${field} flex-1 uppercase`}
+                className={`${field} flex-1 uppercase tracking-wider font-semibold`}
               />
               <button
                 type="button"
                 onClick={applyPromo}
-                className="rounded-md bg-ink px-5 text-sm font-semibold text-paper transition hover:bg-ink/80"
+                className="rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-6 text-sm font-bold text-purple-950 transition hover:brightness-110 shadow-md shadow-amber-500/20"
               >
                 Apply
               </button>
             </div>
-            {promoSuccess && <p className="text-xs font-semibold text-emerald-600">{promoSuccess}</p>}
+            {promoSuccess && <p className="text-xs font-semibold text-emerald-400">{promoSuccess}</p>}
           </div>
 
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-ink-mute">Rider Instructions (Optional)</label>
+          <div className="rounded-2xl border border-amber-400/20 bg-[#24073B] p-5 shadow-xl">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-amber-400">Rider Instructions (Optional)</label>
             <textarea
               name="notes"
               placeholder="e.g. Ring doorbell twice, leave at guard room, call upon arrival…"
@@ -410,66 +410,66 @@ export default function CheckoutPage() {
             />
           </div>
 
-          {error && <p className="rounded-md bg-chili-50 p-3 text-sm font-semibold text-chili-600">{error}</p>}
+          {error && <p className="rounded-xl border border-red-500/40 bg-red-950/60 p-4 text-sm font-semibold text-red-200">{error}</p>}
 
           <button
             type="submit"
             disabled={busy}
-            className="btn-primary w-full rounded-md py-4 text-base disabled:opacity-50"
+            className="btn-primary w-full py-4 text-base font-black disabled:opacity-50"
           >
             {busy ? 'Placing order…' : `Confirm Order · ${formatPkr(total)}`}
           </button>
         </form>
 
-        <aside className="h-fit rounded-xl border border-ink/10 bg-paper-warm p-6 shadow-sm lg:col-span-2">
-          <h2 className="font-display text-2xl text-ink">Order Summary</h2>
-          <ul className="mt-4 divide-y divide-ink/8">
+        <aside className="h-fit rounded-2xl border border-amber-400/25 bg-[#24073B] p-6 shadow-xl lg:col-span-2">
+          <h2 className="font-display text-2xl font-bold text-white">Order Summary</h2>
+          <ul className="mt-4 divide-y divide-purple-800/40">
             {cart.items.map((item) => (
               <li key={item.id} className="py-3 text-sm">
                 <div className="flex justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-ink">
+                    <p className="font-medium text-white">
                       {item.quantity}× {item.productName}
                     </p>
                     <span
                       className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                         item.fulfillmentType === 'HOT_NOW'
-                          ? 'bg-chili-100 text-chili-600'
-                          : 'bg-frost-100 text-frost-800'
+                          ? 'bg-amber-400/15 text-amber-300 border border-amber-400/30'
+                          : 'bg-purple-900/60 text-purple-200 border border-purple-700/40'
                       }`}
                     >
                       {fulfillmentLabel(item.fulfillmentType)}
                     </span>
                     {item.selections && item.selections.length > 0 && (
-                      <p className="mt-1 text-xs text-ink-mute">
+                      <p className="mt-1 text-xs text-purple-300/70">
                         {item.selections.map((s) => s.optionValueLabel).join(', ')}
                       </p>
                     )}
                   </div>
-                  <span className="font-semibold text-ink">{formatPkr(item.lineTotalPkr)}</span>
+                  <span className="font-bold text-amber-300">{formatPkr(item.lineTotalPkr)}</span>
                 </div>
               </li>
             ))}
           </ul>
 
-          <div className="mt-4 space-y-2 border-t border-ink/10 pt-4 text-sm">
-            <div className="flex justify-between text-ink-soft">
+          <div className="mt-4 space-y-2.5 border-t border-purple-800/40 pt-4 text-sm">
+            <div className="flex justify-between text-purple-200/80">
               <span>Subtotal</span>
-              <span>{formatPkr(cart.subtotalPkr)}</span>
+              <span className="text-white font-medium">{formatPkr(cart.subtotalPkr)}</span>
             </div>
-            <div className="flex justify-between text-ink-soft">
+            <div className="flex justify-between text-purple-200/80">
               <span>Delivery Fee</span>
-              <span>{formatPkr(fee)}</span>
+              <span className="text-white font-medium">{formatPkr(fee)}</span>
             </div>
             {discount > 0 && (
-              <div className="flex justify-between font-semibold text-emerald-600">
+              <div className="flex justify-between font-semibold text-emerald-400">
                 <span>Discount</span>
                 <span>−{formatPkr(discount)}</span>
               </div>
             )}
-            <div className="flex justify-between border-t border-ink/10 pt-3 text-lg font-bold text-ink">
+            <div className="flex justify-between border-t border-purple-800/40 pt-3 text-lg font-bold text-white">
               <span>Total</span>
-              <span className="text-chili-600">{formatPkr(total)}</span>
+              <span className="text-amber-400 text-xl font-black">{formatPkr(total)}</span>
             </div>
           </div>
         </aside>

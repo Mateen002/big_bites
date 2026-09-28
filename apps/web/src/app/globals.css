@@ -8,7 +8,7 @@
   --font-fraunces: 'Fraunces', Georgia, serif;
   --font-dm-sans: 'DM Sans', system-ui, sans-serif;
   --paper: #1B042C;
-  --ink: #FFFFFF;
+  --ink: #140224;
   --gold: #F5B800;
   --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-soft: cubic-bezier(0.33, 1, 0.68, 1);
@@ -27,6 +27,13 @@ body {
   @apply bg-[#1B042C] text-white font-sans antialiased;
   background-color: #1B042C;
   color: #FFFFFF;
+}
+
+/* Ensure inputs, textareas, and selects default to dark readable text unless explicitly styled dark */
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  color: #140224;
 }
 
 ::selection {

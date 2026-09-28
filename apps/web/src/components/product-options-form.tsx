@@ -131,13 +131,13 @@ export function ProductOptionsForm({ product }: { product: Product }) {
       {groups.map((group) => {
         const groupMap = selections[group.id] || {};
         return (
-          <fieldset key={group.id} className="rounded-lg border border-ink/8 bg-white/40 p-4">
-            <legend className="px-1 text-sm font-semibold text-ink">
+          <fieldset key={group.id} className="rounded-2xl border border-amber-400/25 bg-[#25083E] p-4 shadow-lg">
+            <legend className="px-1 text-sm font-bold text-amber-400">
               {group.name}
               {group.required ? (
-                <span className="ml-1 text-xs font-bold text-chili-500">* Required</span>
+                <span className="ml-1 text-xs font-bold text-amber-300">* Required</span>
               ) : (
-                <span className="ml-1 text-xs font-normal text-ink-mute">Optional</span>
+                <span className="ml-1 text-xs font-normal text-purple-200/70">Optional</span>
               )}
             </legend>
 
@@ -148,27 +148,27 @@ export function ProductOptionsForm({ product }: { product: Product }) {
                   return (
                     <div
                       key={v.id}
-                      className="flex items-center justify-between rounded-md border border-ink/10 bg-white px-3.5 py-2.5 transition hover:border-ink/20"
+                      className="flex items-center justify-between rounded-xl border border-amber-400/20 bg-[#1C0430] px-3.5 py-2.5 transition"
                     >
                       <div>
-                        <p className="text-sm font-medium text-ink">{v.label}</p>
+                        <p className="text-sm font-semibold text-white">{v.label}</p>
                         {v.priceDeltaPkr > 0 && (
-                          <p className="text-xs text-ink-mute">+{formatPkr(v.priceDeltaPkr)} each</p>
+                          <p className="text-xs text-amber-400">+{formatPkr(v.priceDeltaPkr)} each</p>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          className="flex h-8 w-8 items-center justify-center rounded bg-paper-deep text-sm font-bold text-ink transition active:scale-90 disabled:opacity-30"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2E0A4E] text-sm font-bold text-amber-300 transition hover:bg-amber-400 hover:text-purple-950 active:scale-90 disabled:opacity-30"
                           disabled={count <= 0}
                           onClick={() => adjustQty(group, v.id, -1)}
                         >
                           −
                         </button>
-                        <span className="w-6 text-center text-sm font-bold text-ink">{count}</span>
+                        <span className="w-6 text-center text-sm font-black text-amber-300">{count}</span>
                         <button
                           type="button"
-                          className="flex h-8 w-8 items-center justify-center rounded bg-paper-deep text-sm font-bold text-ink transition active:scale-90"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2E0A4E] text-sm font-bold text-amber-300 transition hover:bg-amber-400 hover:text-purple-950 active:scale-90"
                           onClick={() => adjustQty(group, v.id, 1)}
                         >
                           +
@@ -187,15 +187,15 @@ export function ProductOptionsForm({ product }: { product: Product }) {
                       key={v.id}
                       type="button"
                       onClick={() => toggleSingleOrMulti(group, v.id)}
-                      className={`rounded-full px-4 py-2 text-sm font-medium transition duration-200 active:scale-95 ${
+                      className={`rounded-xl px-4 py-2 text-sm font-bold transition duration-200 active:scale-95 ${
                         active
-                          ? 'bg-ink text-paper shadow-sm'
-                          : 'bg-paper-deep text-ink-soft ring-1 ring-ink/10 hover:ring-ink/25'
+                          ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-purple-950 shadow-md shadow-amber-500/20'
+                          : 'bg-[#1C0430] text-purple-200 border border-amber-400/25 hover:border-amber-400/60 hover:text-amber-300'
                       }`}
                     >
                       {v.label}
                       {v.priceDeltaPkr > 0 && (
-                        <span className="ml-1 opacity-80">+{formatPkr(v.priceDeltaPkr)}</span>
+                        <span className="ml-1 opacity-90">+{formatPkr(v.priceDeltaPkr)}</span>
                       )}
                     </button>
                   );
@@ -207,30 +207,32 @@ export function ProductOptionsForm({ product }: { product: Product }) {
       })}
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-ink-mute">Special instructions</label>
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-amber-400/90">
+          Special instructions
+        </label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={2}
-          className="w-full rounded-md border border-ink/10 bg-white px-3 py-2 text-sm text-ink placeholder:text-ink-mute/50 focus:border-chili-500 focus:outline-none"
+          className="w-full rounded-xl border border-amber-400/30 bg-[#1C0430] px-3.5 py-2.5 text-sm text-white placeholder:text-purple-300/40 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
           placeholder="e.g. Medium spice, extra tissues, separate gravy…"
         />
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 rounded-md border border-ink/10 bg-white p-1">
+        <div className="flex items-center gap-2 rounded-xl border border-amber-400/30 bg-[#1C0430] p-1">
           <button
             type="button"
-            className="flex h-9 w-9 items-center justify-center rounded bg-paper-deep text-base font-bold text-ink transition active:scale-90 disabled:opacity-40"
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2E0A4E] text-base font-bold text-amber-300 transition hover:bg-amber-400 hover:text-purple-950 active:scale-90 disabled:opacity-30"
             disabled={qty <= 1}
             onClick={() => setQty((q) => Math.max(1, q - 1))}
           >
             −
           </button>
-          <span className="w-8 text-center text-sm font-bold text-ink">{qty}</span>
+          <span className="w-8 text-center text-sm font-black text-amber-300">{qty}</span>
           <button
             type="button"
-            className="flex h-9 w-9 items-center justify-center rounded bg-paper-deep text-base font-bold text-ink transition active:scale-90"
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2E0A4E] text-base font-bold text-amber-300 transition hover:bg-amber-400 hover:text-purple-950 active:scale-90"
             onClick={() => setQty((q) => Math.min(99, q + 1))}
           >
             +
@@ -239,14 +241,12 @@ export function ProductOptionsForm({ product }: { product: Product }) {
         <button
           type="submit"
           disabled={busy}
-          className={`btn-primary flex-1 rounded-md disabled:opacity-50 ${
-            added ? 'added-pop !bg-frost-600 hover:!bg-frost-600' : ''
-          }`}
+          className="btn-primary flex-1 py-3 text-sm font-black uppercase tracking-wider"
         >
           {busy ? 'Adding…' : added ? 'Added to cart ✓' : `Add to Cart · ${formatPkr(unit * qty)}`}
         </button>
       </div>
-      {error && <p className="rounded-md bg-chili-50 p-2.5 text-sm font-medium text-chili-600">{error}</p>}
+      {error && <p className="rounded-xl border border-rose-500/40 bg-rose-950/60 p-2.5 text-sm font-semibold text-rose-300">{error}</p>}
     </form>
   );
 }

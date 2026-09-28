@@ -35,21 +35,17 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   }));
 
   return (
-    <div className={hot ? 'bg-paper' : 'bg-frost-50'}>
+    <div className="bg-[#1B042C]">
       <div className="relative h-[40vh] min-h-[260px] md:h-[48vh]">
         {category.image && (
           <Image src={assetUrl(category.image)} alt="" fill className="object-cover" priority sizes="100vw" />
         )}
         <div
-          className={`absolute inset-0 bg-gradient-to-t ${
-            hot ? 'from-ink via-ink/55' : 'from-frost-900 via-frost-900/55'
-          } to-transparent`}
+          className="absolute inset-0 bg-gradient-to-t from-[#140224]/95 via-[#1B042C]/60 to-transparent"
         />
         <div className="absolute bottom-0 mx-auto w-full max-w-6xl px-5 pb-10">
           <span
-            className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${
-              hot ? 'bg-chili-500 text-white' : 'bg-frost-400 text-frost-900'
-            }`}
+            className="rounded-lg px-2.5 py-1 text-[11px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-400 to-yellow-400 text-purple-950 shadow-sm"
           >
             {fulfillmentLabel(category.fulfillmentType)}
           </span>

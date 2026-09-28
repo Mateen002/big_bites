@@ -19,9 +19,9 @@ module.exports = {
           700: '#C68B00',
         },
         ink: {
-          DEFAULT: '#FFFFFF',
-          soft: '#E9D8FD',
-          mute: '#BFA8DF',
+          DEFAULT: '#140224',
+          soft: '#26063F',
+          mute: '#58387A',
         },
         paper: {
           DEFAULT: '#1B042C',

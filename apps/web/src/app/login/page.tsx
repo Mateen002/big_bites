@@ -33,33 +33,35 @@ function LoginForm() {
   }
 
   const field =
-    'w-full border border-ink/15 bg-white px-4 py-3 text-sm focus:border-chili-500 focus:outline-none';
+    'w-full rounded-xl border border-amber-400/30 bg-[#1C0430] px-4 py-3 text-sm text-white placeholder:text-purple-300/40 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition';
 
   return (
-    <div className="bg-paper pt-24">
-      <div className="mx-auto max-w-md px-5 py-12">
-        <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-chili-500">Welcome back</p>
-        <h1 className="mt-2 font-display text-4xl text-ink">Sign in</h1>
-        <p className="mt-2 text-sm text-ink-mute">Track your orders and checkout faster next time.</p>
+    <div className="min-h-screen bg-[#1B042C] pt-24 pb-16">
+      <div className="mx-auto max-w-md px-5 py-8">
+        <div className="rounded-2xl border border-amber-400/25 bg-[#24073B] p-8 shadow-2xl">
+          <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-amber-400">Welcome back</p>
+          <h1 className="mt-2 font-display text-4xl font-bold text-white">Sign in</h1>
+          <p className="mt-2 text-sm text-purple-200/70">Track your orders and checkout faster next time.</p>
 
-        <form onSubmit={onSubmit} className="mt-8 space-y-3">
-          <input name="email" type="email" required placeholder="Email" className={field} />
-          <input name="password" type="password" required minLength={6} placeholder="Password" className={field} />
-          {error && <p className="text-sm text-chili-500">{error}</p>}
-          <button type="submit" disabled={busy} className="btn-primary w-full disabled:opacity-50">
-            {busy ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
+          <form onSubmit={onSubmit} className="mt-8 space-y-4">
+            <input name="email" type="email" required placeholder="Email" className={field} />
+            <input name="password" type="password" required minLength={6} placeholder="Password" className={field} />
+            {error && <p className="text-sm font-semibold text-red-400">{error}</p>}
+            <button type="submit" disabled={busy} className="btn-primary w-full disabled:opacity-50">
+              {busy ? 'Signing in…' : 'Sign in'}
+            </button>
+          </form>
 
-        <p className="mt-6 text-sm text-ink-mute">
-          New to BigBites?{' '}
-          <Link
-            href={`/signup${next !== '/account' ? `?next=${encodeURIComponent(next)}` : ''}`}
-            className="font-semibold text-chili-500"
-          >
-            Create an account
-          </Link>
-        </p>
+          <p className="mt-6 text-sm text-purple-200/70">
+            New to BigBites?{' '}
+            <Link
+              href={`/signup${next !== '/account' ? `?next=${encodeURIComponent(next)}` : ''}`}
+              className="font-bold text-amber-400 hover:underline"
+            >
+              Create an account
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

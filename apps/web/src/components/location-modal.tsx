@@ -202,7 +202,7 @@ export function LocationModal() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Type area (e.g. Valencia, Wapda, Lake City)..."
-                  className="w-full rounded-xl border border-stone-200 bg-white py-2 pl-9 pr-8 text-xs font-medium text-ink placeholder:text-stone-400 focus:border-chili-500 focus:outline-none focus:ring-1 focus:ring-chili-500"
+                  className="w-full rounded-xl border border-stone-200 bg-white py-2 pl-9 pr-8 text-xs font-medium text-stone-900 placeholder:text-stone-400 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
                 />
                 {searchQuery && (
                   <button

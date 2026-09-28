@@ -113,14 +113,14 @@ export function HomeClient({
               className="img-zoom object-cover"
               sizes="(max-width:768px) 100vw, 50vw"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-chili-600/95 via-ink/50 to-transparent transition duration-500 group-hover:from-chili-500/95" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#140224]/95 via-[#1B042C]/50 to-transparent transition duration-500 group-hover:from-[#140224]/85" />
             <div className="absolute inset-x-0 bottom-0 p-8 transition duration-500 group-hover:translate-y-[-4px] md:p-12">
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-mustard-300">Hot & Fast</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">Hot & Fast</p>
               <h2 className="mt-3 font-display text-4xl text-white md:text-5xl lg:text-6xl">Order Now</h2>
               <p className="mt-3 max-w-sm text-sm text-white/85 md:text-base">
                 Desi, burgers, fresh-fried — cooked to order and out the door ASAP.
               </p>
-              <span className="mt-6 inline-block border-b border-white pb-1 text-sm font-semibold text-white transition group-hover:border-mustard-300 group-hover:text-mustard-300">
+              <span className="mt-6 inline-block border-b border-amber-400 pb-1 text-sm font-semibold text-amber-300 transition group-hover:border-amber-300 group-hover:text-amber-200">
                 Browse hot menu →
               </span>
             </div>
@@ -137,14 +137,14 @@ export function HomeClient({
               className="img-zoom object-cover"
               sizes="(max-width:768px) 100vw, 50vw"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-frost-900/95 via-frost-800/45 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#140224]/95 via-[#1B042C]/50 to-transparent transition duration-500 group-hover:from-[#140224]/85" />
             <div className="absolute inset-x-0 bottom-0 p-8 transition duration-500 group-hover:translate-y-[-4px] md:p-12">
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-frost-200">No rush</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">No rush</p>
               <h2 className="mt-3 font-display text-4xl text-white md:text-5xl lg:text-6xl">Stock Your Freezer</h2>
               <p className="mt-3 max-w-sm text-sm text-white/85 md:text-base">
                 Raw packs by weight — schedule delivery when it suits your week.
               </p>
-              <span className="mt-6 inline-block border-b border-white pb-1 text-sm font-semibold text-white transition group-hover:border-frost-200 group-hover:text-frost-200">
+              <span className="mt-6 inline-block border-b border-amber-400 pb-1 text-sm font-semibold text-amber-300 transition group-hover:border-amber-300 group-hover:text-amber-200">
                 Browse frozen packs →
               </span>
             </div>
@@ -152,11 +152,11 @@ export function HomeClient({
         </Reveal>
       </section>
 
-      <section id="order-now" className="scroll-section bg-paper py-20 md:py-28">
+      <section id="order-now" className="scroll-section bg-[#1B042C] py-20 md:py-28">
         <div className="mx-auto max-w-6xl px-5">
           <Reveal className="max-w-2xl">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-chili-500">From the tawa</p>
-            <h2 className="mt-3 font-display text-4xl leading-tight text-ink md:text-5xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">From the tawa</p>
+            <h2 className="mt-3 font-display text-4xl leading-tight text-white md:text-5xl">
               What&apos;s cooking hot
             </h2>
             <p className="mt-4 text-ink-mute">
@@ -184,11 +184,11 @@ export function HomeClient({
                       sizes="(max-width:768px) 100vw, 33vw"
                     />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#140224]/95 via-[#1B042C]/40 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 p-6 transition duration-500 group-hover:translate-y-[-6px] md:p-7">
                     <h3 className="font-display text-3xl text-white">{c.name}</h3>
                     <p className="mt-2 line-clamp-2 text-sm text-white/75">{c.description}</p>
-                    <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-mustard-300">
+                    <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-amber-400">
                       {c._count?.products ?? 0} dishes →
                     </p>
                   </div>
@@ -199,15 +199,15 @@ export function HomeClient({
         </div>
       </section>
 
-      <section className="scroll-section border-y border-ink/10 bg-paper-warm py-20 md:py-24">
+      <section className="scroll-section border-y border-amber-400/20 bg-[#220738] py-20 md:py-24">
         <div className="mx-auto max-w-6xl px-5">
           <Reveal>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-chili-500">Tonight&apos;s favourites</p>
-                <h2 className="mt-3 font-display text-3xl text-ink md:text-4xl">Order these first</h2>
+                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">Tonight&apos;s favourites</p>
+                <h2 className="mt-3 font-display text-3xl text-white md:text-4xl">Order these first</h2>
               </div>
-              <Link href="/order-now" className="text-sm font-semibold text-chili-500 hover:text-chili-600">
+              <Link href="/order-now" className="text-sm font-semibold text-amber-400 hover:text-amber-300">
                 Full hot menu →
               </Link>
             </div>
@@ -300,8 +300,8 @@ export function HomeClient({
         </div>
       </section>
 
-      <section className="scroll-section relative overflow-hidden bg-ink py-24 text-center text-white md:py-32">
-        <div className="absolute inset-0 opacity-30">
+      <section className="scroll-section relative overflow-hidden bg-[#120220] py-24 text-center text-white md:py-32">
+        <div className="absolute inset-0 opacity-25">
           <Image
             src="/images/closing.jpg"
             alt=""
@@ -312,7 +312,7 @@ export function HomeClient({
             sizes="100vw"
           />
         </div>
-        <div className="absolute inset-0 bg-ink/75" />
+        <div className="absolute inset-0 bg-[#120220]/80" />
         <Reveal variant="scale" className="relative mx-auto max-w-3xl px-5">
           <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-mustard-300">Lahore delivery</p>
           <h2 className="mt-4 font-display text-4xl leading-tight md:text-6xl">

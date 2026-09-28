@@ -33,19 +33,13 @@ export function CategoryCard({
           <div className="skeleton h-full w-full" />
         )}
         <div
-          className={`absolute inset-0 bg-gradient-to-t ${
-            tone === 'hot' ? 'from-ink/90 via-ink/30' : 'from-frost-900/90 via-frost-900/30'
-          } to-transparent`}
+          className="absolute inset-0 bg-gradient-to-t from-[#140224]/95 via-[#1B042C]/40 to-transparent"
         />
         <div className="absolute bottom-0 p-5 transition duration-500 group-hover:translate-y-[-6px] md:p-6">
           <h3 className="font-display text-2xl text-white md:text-3xl">{category.name}</h3>
           <p className="mt-1.5 line-clamp-2 text-sm text-white/75">{category.description}</p>
           {category._count && (
-            <p
-              className={`mt-3 text-xs font-bold uppercase tracking-wider ${
-                tone === 'hot' ? 'text-mustard-300' : 'text-frost-200'
-              }`}
-            >
+            <p className="mt-3 text-xs font-bold uppercase tracking-wider text-amber-400">
               {category._count.products} items →
             </p>
           )}
