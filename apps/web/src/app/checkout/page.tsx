@@ -271,36 +271,26 @@ export default function CheckoutPage() {
               </div>
 
               {orderType === 'DELIVERY' ? (
-                <div className="space-y-3 pt-2">
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-purple-200/80">
-                      Select Area / Society in Lahore
-                    </label>
-                    <select
-                      value={zoneId}
-                      onChange={(e) => {
-                        setZoneId(e.target.value);
-                        const found = zones.find((z) => z.id === e.target.value);
-                        if (found) setSelectedZone(found);
-                      }}
-                      className={`${field} cursor-pointer`}
-                    >
-                      {zones.map((z) => (
-                        <option key={z.id} value={z.id} className="bg-[#24073B] text-white">
-                          {z.name} — {formatPkr(z.feePkr)} delivery · {z.etaMinutesMin}–{z.etaMinutesMax} min
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
+                <div className="space-y-2 pt-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-amber-400">
+                    Delivery Address in Lahore
+                  </label>
                   <textarea
                     name="addressLine"
                     required
-                    placeholder="Complete street address (House/Flat #, Street #, Sector/Block, Landmark)"
+                    placeholder="Complete delivery address (House/Flat #, Street #, Sector/Area, Landmark, Lahore)"
                     rows={3}
                     className={field}
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setAddress(val);
+                      const matched = zones.find((z) => val.toLowerCase().includes(z.name.toLowerCase()));
+                      if (matched) {
+                        setZoneId(matched.id);
+                        setSelectedZone(matched);
+                      }
+                    }}
                   />
                 </div>
               ) : (
