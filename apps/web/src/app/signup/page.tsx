@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, Suspense, useState } from 'react';
+import { FormEvent, Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth-provider';
 import { isValidPakistaniPhone, formatPakistaniPhone } from '@/lib/api';
@@ -14,9 +14,11 @@ function SignupForm() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  if (!loading && user) {
-    router.replace(next);
-  }
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace(next);
+    }
+  }, [loading, user, next, router]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
