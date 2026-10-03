@@ -35,7 +35,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   }));
 
   return (
-    <div className="bg-[#1B042C]">
+    <div className="bg-[#1B042C] min-h-screen">
       <div className="relative h-[40vh] min-h-[260px] md:h-[48vh]">
         {category.image && (
           <Image src={assetUrl(category.image)} alt="" fill className="object-cover" priority sizes="100vw" />
@@ -49,8 +49,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
           >
             {fulfillmentLabel(category.fulfillmentType)}
           </span>
-          <h1 className="mt-3 font-display text-4xl text-white md:text-6xl">{category.name}</h1>
-          <p className="mt-3 max-w-xl text-white/80">{category.description}</p>
+          <h1 className="mt-3 font-display text-4xl font-bold text-white md:text-6xl">{category.name}</h1>
+          <p className="mt-3 max-w-xl text-purple-200/90">{category.description}</p>
         </div>
       </div>
       <div className="mx-auto max-w-6xl px-5 pb-16 pt-2">
@@ -61,15 +61,21 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
           allLabel={hot ? 'All hot' : 'All packs'}
         />
         <Reveal>
-          <div className="mb-2 flex items-end justify-between">
-            <h2 className="font-display text-3xl text-ink">Menu</h2>
-            <p className="text-sm text-ink-mute">{products.length} items</p>
+          <div className="mb-3 flex items-end justify-between">
+            <h2 className="font-display text-3xl font-bold text-white">Menu</h2>
+            <p className="text-sm font-semibold text-purple-200/80">{products.length} items</p>
           </div>
         </Reveal>
-        <div className={`border border-ink/8 ${hot ? 'bg-white' : 'bg-white'} px-4 md:px-5`}>
-          {products.map((p, i) => (
-            <ProductRow key={p.id} product={p} index={i} />
-          ))}
+        <div className="rounded-2xl border border-amber-400/20 bg-[#24073B] p-4 shadow-xl md:p-6">
+          {products.length === 0 ? (
+            <div className="py-12 text-center text-purple-200/70">
+              No dishes found in this category yet.
+            </div>
+          ) : (
+            products.map((p, i) => (
+              <ProductRow key={p.id} product={p} index={i} />
+            ))
+          )}
         </div>
       </div>
     </div>
