@@ -45,12 +45,43 @@ function MenuIcon({ open }: { open: boolean }) {
   );
 }
 
+function UserIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function LogoutIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function SiteHeader({ categories }: { categories: Category[] }) {
   const [scrolled, setScrolled] = useState(false);
   const [overHero, setOverHero] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [catsOpen, setCatsOpen] = useState(false);
   const catsRef = useRef<HTMLDivElement>(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const { cart, setOpen } = useCart();
   const { user, logout } = useAuth();
   const pathname = usePathname();
@@ -121,6 +152,7 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
   useEffect(() => {
     setMenuOpen(false);
     setCatsOpen(false);
+    setUserMenuOpen(false);
     setSearchOpen(false);
     setQuery('');
   }, [pathname]);
@@ -138,6 +170,7 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
       if (!catsRef.current?.contains(e.target as Node)) setCatsOpen(false);
+      if (!userMenuRef.current?.contains(e.target as Node)) setUserMenuOpen(false);
     };
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
@@ -291,14 +324,86 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
             My Orders
           </Link>
 
-          <Link
-            href={user ? '/account' : '/login'}
-            className={`hidden px-3 py-2 text-sm font-medium transition sm:inline ${
-              lightOnDark ? 'text-white/85 hover:text-white' : 'text-ink-soft hover:text-ink'
-            }`}
-          >
-            {user ? user.name.split(' ')[0] : 'Sign in'}
-          </Link>
+          {/* User Account / Dropdown */}
+          {user ? (
+            <div className="relative hidden sm:block" ref={userMenuRef}>
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen((v) => !v)}
+                className="flex items-center gap-2 rounded-xl border border-amber-400/25 bg-[#25083E] px-3 py-1.5 text-sm font-semibold text-white transition hover:border-amber-400/50 hover:bg-[#340B58]"
+                aria-expanded={userMenuOpen}
+              >
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 text-xs font-black text-purple-950 shadow-sm">
+                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <span className="max-w-[90px] truncate text-xs font-bold text-amber-100">
+                  {user.name.split(' ')[0]}
+                </span>
+                <svg
+                  className={`h-3 w-3 text-amber-400 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-60 origin-top-right rounded-2xl border border-amber-400/30 bg-[#24073B] p-2 shadow-2xl backdrop-blur-xl z-50">
+                  <div className="px-3 py-2.5 border-b border-amber-400/15">
+                    <p className="text-xs font-bold text-white truncate">{user.name}</p>
+                    <p className="text-[11px] text-purple-200/70 truncate">{user.email}</p>
+                  </div>
+
+                  <div className="py-1">
+                    <Link
+                      href="/account"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-purple-100 transition hover:bg-amber-400/15 hover:text-amber-300"
+                    >
+                      <UserIcon className="h-4 w-4 text-amber-400" />
+                      My Profile & Account
+                    </Link>
+                    <Link
+                      href="/my-orders"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-purple-100 transition hover:bg-amber-400/15 hover:text-amber-300"
+                    >
+                      <svg className="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                      My Orders
+                    </Link>
+                  </div>
+
+                  <div className="pt-1 border-t border-amber-400/15">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        logout();
+                      }}
+                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-bold text-rose-400 transition hover:bg-rose-500/15 hover:text-rose-300"
+                    >
+                      <LogoutIcon className="h-4 w-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className={`hidden items-center gap-1.5 px-3 py-2 text-sm font-semibold transition sm:inline-flex ${
+                lightOnDark ? 'text-white/85 hover:text-white' : 'text-ink-soft hover:text-ink'
+              }`}
+            >
+              Sign in
+            </Link>
+          )}
 
           <button
             type="button"
@@ -418,26 +523,50 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
                 </Link>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                <Link
-                  href="/my-orders"
-                  onClick={() => setMenuOpen(false)}
-                  className="border border-ink/15 px-4 py-3 text-center text-sm font-semibold"
-                >
-                  My Orders
-                </Link>
-                {user ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      logout();
-                      setMenuOpen(false);
-                    }}
-                    className="border border-ink/15 px-4 py-3 text-sm font-semibold text-rose-600"
+              {user ? (
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center justify-between rounded-xl bg-purple-900/10 border border-purple-900/20 px-3.5 py-2.5">
+                    <div>
+                      <p className="text-xs font-bold text-ink">{user.name}</p>
+                      <p className="text-[11px] text-ink-mute">{user.email}</p>
+                    </div>
+                    <Link
+                      href="/account"
+                      onClick={() => setMenuOpen(false)}
+                      className="text-xs font-bold text-chili-600 hover:underline"
+                    >
+                      Account →
+                    </Link>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link
+                      href="/my-orders"
+                      onClick={() => setMenuOpen(false)}
+                      className="border border-ink/15 px-4 py-3 text-center text-sm font-semibold text-ink"
+                    >
+                      My Orders
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        logout();
+                        setMenuOpen(false);
+                      }}
+                      className="border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-center text-sm font-bold text-rose-600"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <Link
+                    href="/my-orders"
+                    onClick={() => setMenuOpen(false)}
+                    className="border border-ink/15 px-4 py-3 text-center text-sm font-semibold"
                   >
-                    Sign out ({user.name.split(' ')[0]})
-                  </button>
-                ) : (
+                    My Orders
+                  </Link>
                   <Link
                     href="/login"
                     onClick={() => setMenuOpen(false)}
@@ -445,8 +574,8 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
                   >
                     Sign in
                   </Link>
-                )}
-              </div>
+                </div>
+              )}
 
               <p className="mt-8 text-[10px] font-bold uppercase tracking-[0.25em] text-chili-500">Hot & Fast</p>
               <ul className="mt-3 divide-y divide-ink/8 border-y border-ink/8">
