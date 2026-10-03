@@ -29,11 +29,38 @@ body {
   color: #FFFFFF;
 }
 
-/* Ensure inputs, textareas, and selects default to dark readable text unless explicitly styled dark */
+/* Form inputs, textareas, and selects default to crisp white readable text */
 input:not([type="checkbox"]):not([type="radio"]),
 textarea,
 select {
-  color: #140224;
+  color: #FFFFFF !important;
+  caret-color: #F5B800;
+}
+
+/* Light background inputs (e.g. location modal) retain crisp dark text */
+input.text-stone-900,
+textarea.text-stone-900,
+select.text-stone-900,
+.text-stone-900 input {
+  color: #140224 !important;
+  caret-color: #140224;
+}
+
+/* Chrome/Safari/Edge autofill override to preserve dark royal purple inputs with white text */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #1C0430 inset !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  caret-color: #FFFFFF !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Subtle readable lavender placeholders */
+input::placeholder,
+textarea::placeholder {
+  color: rgba(226, 217, 243, 0.5) !important;
 }
 
 ::selection {
