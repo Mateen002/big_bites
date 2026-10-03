@@ -38,9 +38,9 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
-  const port = Number(process.env.API_PORT || 4000);
-  await app.listen(port);
-  console.log(`BigBites API listening on http://localhost:${port}/api/v1`);
+  const port = Number(process.env.PORT || process.env.API_PORT || 4000);
+  await app.listen(port, '0.0.0.0');
+  console.log(`BigBites API listening on port ${port} (http://0.0.0.0:${port}/api/v1)`);
 }
 
 bootstrap();
