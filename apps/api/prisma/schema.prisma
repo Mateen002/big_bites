@@ -3,11 +3,9 @@ generator client {
 }
 
 datasource db {
-  // Local default: SQLite (no Docker required).
-  // For production / Docker Compose Postgres, set provider = "postgresql"
-  // and DATABASE_URL=postgresql://bigbites:bigbites@localhost:5432/bigbites?schema=public
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum FulfillmentType {
