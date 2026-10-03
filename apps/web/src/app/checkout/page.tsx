@@ -67,7 +67,7 @@ export default function CheckoutPage() {
         setZoneId(z[0].id);
         setSelectedZone(z[0]);
       }
-    });
+    }).catch(() => {});
   }, [selectedZone, setSelectedZone]);
 
   const activeZone = zones.find((z) => z.id === zoneId) || selectedZone || zones[0];

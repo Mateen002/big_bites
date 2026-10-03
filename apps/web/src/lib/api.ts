@@ -117,6 +117,30 @@ export type DeliveryZone = {
   etaMinutesMax: number;
 };
 
+async function fetchWithRetry(url: string, init: RequestInit, retries = 2, delayMs = 600): Promise<Response> {
+  let targetUrl = url;
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fetch(targetUrl, init);
+    } catch (err) {
+      lastError = err;
+      // On connection errors (common on Windows with IPv6/IPv4 localhost binding differences), swap host:
+      if (targetUrl.includes('localhost') && attempt === 0) {
+        targetUrl = targetUrl.replace('localhost', '127.0.0.1');
+      } else if (targetUrl.includes('127.0.0.1') && attempt === 0) {
+        targetUrl = targetUrl.replace('127.0.0.1', 'localhost');
+      }
+      if (attempt < retries) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error('BigBites backend API could not be reached. Please verify the API server is running on port 4000.');
+}
+
 async function request<T>(
   path: string,
   options: RequestInit & { cartSession?: boolean; auth?: boolean } = {},
@@ -132,7 +156,7 @@ async function request<T>(
     if (token) headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetchWithRetry(`${API_URL}${path}`, {
     ...options,
     headers,
     cache: options.cache ?? 'no-store',

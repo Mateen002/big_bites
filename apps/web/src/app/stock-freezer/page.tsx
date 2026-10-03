@@ -20,6 +20,9 @@ export default function StockFreezerPage() {
         setCategories(c);
         setProducts(p);
       })
+      .catch((err) => {
+        console.warn('Could not load frozen categories or products:', err);
+      })
       .finally(() => setLoading(false));
   }, []);
 

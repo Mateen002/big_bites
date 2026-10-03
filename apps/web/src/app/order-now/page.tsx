@@ -20,6 +20,9 @@ export default function OrderNowPage() {
         setCategories(c);
         setProducts(p);
       })
+      .catch((err) => {
+        console.warn('Could not load hot categories or products:', err);
+      })
       .finally(() => setLoading(false));
   }, []);
 
