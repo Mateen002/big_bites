@@ -5,7 +5,7 @@ import { ProductRow } from '@/components/product-row';
 import { CategoryStrip } from '@/components/category-strip';
 import { Reveal } from '@/components/reveal';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

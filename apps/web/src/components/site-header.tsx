@@ -302,134 +302,132 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
               )}
           </div>
 
-          {/* Quick Search Button */}
-          <button
-            type="button"
-            onClick={() => setSearchOpen(true)}
-            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-medium transition ${
-              lightOnDark ? 'text-white/85 hover:bg-white/10' : 'text-ink-soft hover:bg-ink/5'
-            }`}
-            aria-label="Search dishes"
-          >
-            <SearchIcon className="h-4 w-4" />
-            <span className="hidden lg:inline text-xs">Search</span>
-          </button>
+          {/* Actions group firmly on the right side */}
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+            {/* Quick Search Button */}
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              className="flex items-center gap-1.5 rounded-xl p-2 text-sm font-medium text-amber-200/90 transition hover:bg-amber-400/10 hover:text-amber-300"
+              aria-label="Search dishes"
+            >
+              <SearchIcon className="h-4 w-4 text-amber-300" />
+              <span className="hidden lg:inline text-xs font-bold text-amber-200">Search</span>
+            </button>
 
-          <Link
-            href="/my-orders"
-            className={`hidden px-3 py-2 text-sm font-medium transition sm:inline ${
-              lightOnDark ? 'text-white/85 hover:text-white' : 'text-ink-soft hover:text-ink'
-            }`}
-          >
-            My Orders
-          </Link>
-
-          {/* User Account / Dropdown */}
-          {user ? (
-            <div className="relative hidden sm:block" ref={userMenuRef}>
-              <button
-                type="button"
-                onClick={() => setUserMenuOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-xl border border-amber-400/25 bg-[#25083E] px-3 py-1.5 text-sm font-semibold text-white transition hover:border-amber-400/50 hover:bg-[#340B58]"
-                aria-expanded={userMenuOpen}
-              >
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 text-xs font-black text-purple-950 shadow-sm">
-                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                </div>
-                <span className="max-w-[90px] truncate text-xs font-bold text-amber-100">
-                  {user.name.split(' ')[0]}
-                </span>
-                <svg
-                  className={`h-3 w-3 text-amber-400 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {userMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-60 origin-top-right rounded-2xl border border-amber-400/30 bg-[#24073B] p-2 shadow-2xl backdrop-blur-xl z-50">
-                  <div className="px-3 py-2.5 border-b border-amber-400/15">
-                    <p className="text-xs font-bold text-white truncate">{user.name}</p>
-                    <p className="text-[11px] text-purple-200/70 truncate">{user.email}</p>
-                  </div>
-
-                  <div className="py-1">
-                    <Link
-                      href="/account"
-                      onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-purple-100 transition hover:bg-amber-400/15 hover:text-amber-300"
-                    >
-                      <UserIcon className="h-4 w-4 text-amber-400" />
-                      My Profile & Account
-                    </Link>
-                    <Link
-                      href="/my-orders"
-                      onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-purple-100 transition hover:bg-amber-400/15 hover:text-amber-300"
-                    >
-                      <svg className="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                      My Orders
-                    </Link>
-                  </div>
-
-                  <div className="pt-1 border-t border-amber-400/15">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUserMenuOpen(false);
-                        logout();
-                      }}
-                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-bold text-rose-400 transition hover:bg-rose-500/15 hover:text-rose-300"
-                    >
-                      <LogoutIcon className="h-4 w-4" />
-                      Sign Out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
             <Link
-              href="/login"
-              className={`hidden items-center gap-1.5 px-3 py-2 text-sm font-semibold transition sm:inline-flex ${
-                lightOnDark ? 'text-white/85 hover:text-white' : 'text-ink-soft hover:text-ink'
-              }`}
+              href="/my-orders"
+              className="hidden px-3 py-2 text-xs font-bold uppercase tracking-wider text-amber-200/90 transition hover:text-amber-300 sm:inline"
             >
-              Sign in
+              My Orders
             </Link>
-          )}
 
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="relative flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 px-3.5 py-2 text-sm font-black text-purple-950 transition hover:brightness-110 shadow-md shadow-amber-500/20 active:scale-95"
-            aria-label="Open cart"
-          >
-            <CartIcon className="h-4 w-4" />
-            <span className="hidden sm:inline">Cart</span>
-            <span
-              className={`flex h-5 min-w-5 items-center justify-center rounded-full bg-purple-950 px-1 text-[11px] font-black text-amber-300 ${
-                cartBump ? 'cart-bump' : ''
-              }`}
+            {/* User Account / Dropdown */}
+            {user ? (
+              <div className="relative hidden sm:block" ref={userMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen((v) => !v)}
+                  className="flex items-center gap-2 rounded-xl border border-amber-400/25 bg-[#25083E] px-3 py-1.5 text-sm font-semibold text-white transition hover:border-amber-400/50 hover:bg-[#340B58]"
+                  aria-expanded={userMenuOpen}
+                >
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 text-xs font-black text-purple-950 shadow-sm">
+                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <span className="max-w-[90px] truncate text-xs font-bold text-amber-100">
+                    {user.name.split(' ')[0]}
+                  </span>
+                  <svg
+                    className={`h-3 w-3 text-amber-400 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-60 origin-top-right rounded-2xl border border-amber-400/30 bg-[#24073B] p-2 shadow-2xl backdrop-blur-xl z-50">
+                    <div className="px-3 py-2.5 border-b border-amber-400/15">
+                      <p className="text-xs font-bold text-white truncate">{user.name}</p>
+                      <p className="text-[11px] text-purple-200/70 truncate">{user.email}</p>
+                    </div>
+
+                    <div className="py-1">
+                      <Link
+                        href="/account"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-purple-100 transition hover:bg-amber-400/15 hover:text-amber-300"
+                      >
+                        <UserIcon className="h-4 w-4 text-amber-400" />
+                        My Profile & Account
+                      </Link>
+                      <Link
+                        href="/my-orders"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-purple-100 transition hover:bg-amber-400/15 hover:text-amber-300"
+                      >
+                        <svg className="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        My Orders
+                      </Link>
+                    </div>
+
+                    <div className="pt-1 border-t border-amber-400/15">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          logout();
+                        }}
+                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-bold text-rose-400 transition hover:bg-rose-500/15 hover:text-rose-300"
+                      >
+                        <LogoutIcon className="h-4 w-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="hidden items-center gap-1.5 rounded-xl border border-amber-400/25 bg-[#25083E] px-3 py-1.5 text-xs font-bold text-amber-200 transition hover:bg-amber-400/15 hover:text-white sm:inline-flex"
+              >
+                Sign in
+              </Link>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="relative flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 px-3.5 py-2 text-sm font-black text-purple-950 transition hover:brightness-110 shadow-md shadow-amber-500/20 active:scale-95"
+              aria-label="Open cart"
             >
-              <AnimatedNumber value={cart.itemCount} />
-            </span>
-          </button>
+              <CartIcon className="h-4 w-4" />
+              <span className="hidden sm:inline">Cart</span>
+              <span
+                className={`flex h-5 min-w-5 items-center justify-center rounded-full bg-purple-950 px-1 text-[11px] font-black text-amber-300 ${
+                  cartBump ? 'cart-bump' : ''
+                }`}
+              >
+                <AnimatedNumber value={cart.itemCount} />
+              </span>
+            </button>
 
-          <button
-            type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-amber-300 hover:bg-amber-400/10 md:hidden"
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label="Toggle menu"
-          >
-            <MenuIcon open={menuOpen} />
-          </button>
+            {/* Hamburger Button (Mobile only, rightmost element) */}
+            <button
+              type="button"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-400/20 bg-purple-950/60 text-amber-300 hover:bg-amber-400/15 md:hidden active:scale-95 transition"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Toggle menu"
+            >
+              <MenuIcon open={menuOpen} />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -504,105 +502,175 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
         </div>
       )}
 
-      {/* Mobile full menu */}
+      {/* Mobile Right-Side Drawer */}
       {menuOpen && (
-          <div className="menu-in fixed inset-0 z-30 bg-paper pt-20 md:hidden">
-            <div className="flex h-full flex-col overflow-y-auto px-5 pb-10">
-              <div className="grid grid-cols-2 gap-2">
-                <Link
-                  href="/order-now"
-                  className="bg-chili-500 px-4 py-4 text-center text-sm font-bold text-white"
-                >
-                  Order Now
-                </Link>
-                <Link
-                  href="/stock-freezer"
-                  className="bg-frost-600 px-4 py-4 text-center text-sm font-bold text-white"
-                >
-                  Stock Freezer
-                </Link>
-              </div>
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop overlay */}
+          <div
+            className="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity"
+            onClick={() => setMenuOpen(false)}
+            aria-hidden="true"
+          />
 
-              {user ? (
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between rounded-xl bg-purple-900/10 border border-purple-900/20 px-3.5 py-2.5">
-                    <div>
-                      <p className="text-xs font-bold text-ink">{user.name}</p>
-                      <p className="text-[11px] text-ink-mute">{user.email}</p>
-                    </div>
-                    <Link
-                      href="/account"
-                      onClick={() => setMenuOpen(false)}
-                      className="text-xs font-bold text-chili-600 hover:underline"
-                    >
-                      Account →
-                    </Link>
+          {/* Right-side sliding drawer panel */}
+          <div className="fixed inset-y-0 right-0 z-50 flex h-full w-[85vw] max-w-sm flex-col border-l border-amber-400/30 bg-[#1A032A] p-5 shadow-2xl shadow-black/80 overflow-y-auto">
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between border-b border-amber-400/20 pb-4">
+              <div className="flex items-center gap-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/logo.png"
+                  alt="BigBites"
+                  className="h-9 w-auto object-contain drop-shadow-[0_2px_8px_rgba(245,184,0,0.35)]"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setMenuOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-400/30 bg-purple-950/80 text-amber-300 hover:bg-amber-400/20 active:scale-95 transition"
+                aria-label="Close menu"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Quick Browsing Modes */}
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <Link
+                href="/order-now"
+                onClick={() => setMenuOpen(false)}
+                className="rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 px-3 py-3 text-center text-xs font-black uppercase tracking-wider text-purple-950 shadow-md shadow-amber-500/20 transition hover:brightness-105 active:scale-95"
+              >
+                Order Hot & Fast
+              </Link>
+              <Link
+                href="/stock-freezer"
+                onClick={() => setMenuOpen(false)}
+                className="rounded-xl border border-cyan-400/40 bg-cyan-950/50 px-3 py-3 text-center text-xs font-black uppercase tracking-wider text-cyan-300 shadow-md transition hover:bg-cyan-900/60 active:scale-95"
+              >
+                Stock Freezer
+              </Link>
+            </div>
+
+            {/* User Account / Navigation */}
+            {user ? (
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center justify-between rounded-xl border border-amber-400/20 bg-purple-950/70 px-3.5 py-2.5">
+                  <div className="truncate">
+                    <p className="text-xs font-bold text-white truncate">{user.name}</p>
+                    <p className="text-[11px] text-purple-200/70 truncate">{user.email}</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Link
-                      href="/my-orders"
-                      onClick={() => setMenuOpen(false)}
-                      className="border border-ink/15 px-4 py-3 text-center text-sm font-semibold text-ink"
-                    >
-                      My Orders
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        logout();
-                        setMenuOpen(false);
-                      }}
-                      className="border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-center text-sm font-bold text-rose-600"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
+                  <Link
+                    href="/account"
+                    onClick={() => setMenuOpen(false)}
+                    className="shrink-0 text-xs font-bold text-amber-400 hover:text-amber-300"
+                  >
+                    Account →
+                  </Link>
                 </div>
-              ) : (
-                <div className="mt-4 grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <Link
                     href="/my-orders"
                     onClick={() => setMenuOpen(false)}
-                    className="border border-ink/15 px-4 py-3 text-center text-sm font-semibold"
+                    className="rounded-xl border border-amber-400/25 bg-purple-950/80 px-3 py-2.5 text-center text-xs font-bold text-white transition hover:bg-amber-400/15 hover:text-amber-300"
                   >
                     My Orders
                   </Link>
-                  <Link
-                    href="/login"
-                    onClick={() => setMenuOpen(false)}
-                    className="bg-ink px-4 py-3 text-center text-sm font-semibold text-paper"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logout();
+                      setMenuOpen(false);
+                    }}
+                    className="rounded-xl border border-rose-500/30 bg-rose-500/15 px-3 py-2.5 text-center text-xs font-bold text-rose-300 transition hover:bg-rose-500/25"
                   >
-                    Sign in
-                  </Link>
+                    Sign Out
+                  </button>
                 </div>
-              )}
+              </div>
+            ) : (
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <Link
+                  href="/my-orders"
+                  onClick={() => setMenuOpen(false)}
+                  className="rounded-xl border border-amber-400/30 bg-[#25083E] px-3 py-2.5 text-center text-xs font-bold text-white transition hover:bg-amber-400/15 hover:text-amber-300"
+                >
+                  My Orders
+                </Link>
+                <Link
+                  href="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 px-3 py-2.5 text-center text-xs font-black text-purple-950 shadow-md transition hover:brightness-105"
+                >
+                  Sign in
+                </Link>
+              </div>
+            )}
 
-              <p className="mt-8 text-[10px] font-bold uppercase tracking-[0.25em] text-chili-500">Hot & Fast</p>
-              <ul className="mt-3 divide-y divide-ink/8 border-y border-ink/8">
+            {/* Hot & Fast Categories */}
+            <div className="mt-6">
+              <div className="flex items-center justify-between border-b border-amber-400/20 pb-2">
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-400">Hot & Fast Menu</p>
+                <Link
+                  href="/order-now"
+                  onClick={() => setMenuOpen(false)}
+                  className="text-[11px] font-bold text-amber-300/80 hover:text-amber-300"
+                >
+                  View All →
+                </Link>
+              </div>
+              <ul className="mt-2 divide-y divide-amber-400/10">
                 {hotCats.map((c) => (
                   <li key={c.id}>
-                    <Link href={`/categories/${c.slug}`} className="flex items-center justify-between py-3.5 text-base font-medium text-ink">
-                      {c.name}
-                      <span className="text-xs text-ink-mute">{c._count?.products ?? ''} →</span>
+                    <Link
+                      href={`/categories/${c.slug}`}
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center justify-between py-3 px-2 rounded-lg text-white font-semibold text-sm transition hover:bg-amber-400/10 hover:text-amber-300 group"
+                    >
+                      <span className="text-white group-hover:text-amber-300 transition">{c.name}</span>
+                      <span className="rounded-full bg-amber-400/15 border border-amber-400/25 px-2.5 py-0.5 text-xs font-bold text-amber-300">
+                        {c._count?.products ?? ''} →
+                      </span>
                     </Link>
                   </li>
                 ))}
               </ul>
+            </div>
 
-              <p className="mt-8 text-[10px] font-bold uppercase tracking-[0.25em] text-frost-600">Freezer</p>
-              <ul className="mt-3 divide-y divide-ink/8 border-y border-ink/8">
+            {/* Freezer Categories */}
+            <div className="mt-6 pb-6">
+              <div className="flex items-center justify-between border-b border-cyan-400/20 pb-2">
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-cyan-300">Stock Your Freezer</p>
+                <Link
+                  href="/stock-freezer"
+                  onClick={() => setMenuOpen(false)}
+                  className="text-[11px] font-bold text-cyan-300/80 hover:text-cyan-300"
+                >
+                  View All →
+                </Link>
+              </div>
+              <ul className="mt-2 divide-y divide-cyan-400/10">
                 {coldCats.map((c) => (
                   <li key={c.id}>
-                    <Link href={`/categories/${c.slug}`} className="flex items-center justify-between py-3.5 text-base font-medium text-ink">
-                      {c.name}
-                      <span className="text-xs text-ink-mute">→</span>
+                    <Link
+                      href={`/categories/${c.slug}`}
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center justify-between py-3 px-2 rounded-lg text-white font-semibold text-sm transition hover:bg-cyan-400/10 hover:text-cyan-300 group"
+                    >
+                      <span className="text-white group-hover:text-cyan-300 transition">{c.name}</span>
+                      <span className="rounded-full bg-cyan-400/15 border border-cyan-400/25 px-2.5 py-0.5 text-xs font-bold text-cyan-300">
+                        {c._count?.products ? `${c._count.products} →` : '→'}
+                      </span>
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
-        )}
+        </div>
+      )}
     </>
   );
 }

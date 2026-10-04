@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { api, formatPkr, fulfillmentLabel, assetUrl } from '@/lib/api';
 import { ProductOptionsForm } from '@/components/product-options-form';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

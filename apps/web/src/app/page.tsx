@@ -1,7 +1,7 @@
 import { HomeClient } from '@/components/home-client';
 import { api } from '@/lib/api';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60; // Edge cached on Vercel, revalidated every 60s
 
 export default async function HomePage() {
   let hot: Awaited<ReturnType<typeof api.categories>> = [];
