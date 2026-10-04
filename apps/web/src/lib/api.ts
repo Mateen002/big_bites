@@ -141,10 +141,47 @@ async function fetchWithRetry(url: string, init: RequestInit, retries = 2, delay
     : new Error('BigBites backend API could not be reached. Please verify the API server is running on port 4000.');
 }
 
+interface BrowserCacheEntry {
+  data: unknown;
+  expiresAt: number;
+}
+const browserCache = new Map<string, BrowserCacheEntry>();
+const inflightBrowserRequests = new Map<string, Promise<unknown>>();
+const BROWSER_CACHE_TTL_MS = 90_000; // 90 seconds browser memory cache
+
+function isCacheablePath(
+  path: string,
+  options?: RequestInit & { cartSession?: boolean; auth?: boolean },
+) {
+  if (options?.cartSession || options?.auth === true) return false;
+  if (options?.method && options.method.toUpperCase() !== 'GET') return false;
+  return (
+    path.startsWith('/categories') ||
+    path.startsWith('/products') ||
+    path.startsWith('/zones')
+  );
+}
+
 async function request<T>(
   path: string,
-  options: RequestInit & { cartSession?: boolean; auth?: boolean } = {},
+  options: RequestInit & {
+    cartSession?: boolean;
+    auth?: boolean;
+    next?: { revalidate?: number | false; tags?: string[] };
+  } = {},
 ): Promise<T> {
+  const isCacheable = isCacheablePath(path, options);
+
+  if (typeof window !== 'undefined' && isCacheable) {
+    const cached = browserCache.get(path);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.data as T;
+    }
+    if (inflightBrowserRequests.has(path)) {
+      return inflightBrowserRequests.get(path) as Promise<T>;
+    }
+  }
+
   const headers = new Headers(options.headers);
   headers.set('Content-Type', 'application/json');
   if (options.cartSession) {
@@ -156,41 +193,75 @@ async function request<T>(
     if (token) headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const res = await fetchWithRetry(`${API_URL}${path}`, {
-    ...options,
-    headers,
-    cache: options.cache ?? 'no-store',
-  });
+  const fetchCache =
+    options.cache !== undefined
+      ? options.cache
+      : isCacheable
+        ? undefined
+        : 'no-store';
 
-  const newSession =
-    res.headers.get('x-cart-session') || res.headers.get('X-Cart-Session');
-  if (newSession) setCartSession(newSession);
+  const fetchNext =
+    options.next !== undefined
+      ? options.next
+      : isCacheable
+        ? { revalidate: 60 }
+        : undefined;
 
-  if (res.status === 401) {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(CUSTOMER_TOKEN_KEY);
-      window.dispatchEvent(new Event('auth-unauthorized'));
+  const fetchPromise = (async () => {
+    const res = await fetchWithRetry(`${API_URL}${path}`, {
+      ...options,
+      headers,
+      cache: fetchCache,
+      ...(fetchNext ? { next: fetchNext } : {}),
+    });
+
+    const newSession =
+      res.headers.get('x-cart-session') || res.headers.get('X-Cart-Session');
+    if (newSession) setCartSession(newSession);
+
+    if (res.status === 401) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(CUSTOMER_TOKEN_KEY);
+        window.dispatchEvent(new Event('auth-unauthorized'));
+      }
     }
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(
+        Array.isArray(err.message) ? err.message.join(', ') : err.message || err.error || 'Request failed',
+      );
+    }
+    const data = (await res.json()) as T;
+    // Also persist session from cart JSON body (CORS may hide response headers)
+    if (
+      data &&
+      typeof data === 'object' &&
+      'sessionId' in data &&
+      typeof (data as { sessionId?: unknown }).sessionId === 'string' &&
+      (data as { sessionId: string }).sessionId
+    ) {
+      setCartSession((data as { sessionId: string }).sessionId);
+    }
+
+    if (typeof window !== 'undefined' && isCacheable) {
+      browserCache.set(path, {
+        data,
+        expiresAt: Date.now() + BROWSER_CACHE_TTL_MS,
+      });
+    }
+
+    return data;
+  })();
+
+  if (typeof window !== 'undefined' && isCacheable) {
+    inflightBrowserRequests.set(path, fetchPromise);
+    fetchPromise.finally(() => {
+      inflightBrowserRequests.delete(path);
+    });
   }
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(
-      Array.isArray(err.message) ? err.message.join(', ') : err.message || err.error || 'Request failed',
-    );
-  }
-  const data = (await res.json()) as T;
-  // Also persist session from cart JSON body (CORS may hide response headers)
-  if (
-    data &&
-    typeof data === 'object' &&
-    'sessionId' in data &&
-    typeof (data as { sessionId?: unknown }).sessionId === 'string' &&
-    (data as { sessionId: string }).sessionId
-  ) {
-    setCartSession((data as { sessionId: string }).sessionId);
-  }
-  return data;
+  return fetchPromise;
 }
 
 export const api = {

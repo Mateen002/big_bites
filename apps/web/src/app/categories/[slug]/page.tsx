@@ -7,6 +7,15 @@ import { Reveal } from '@/components/reveal';
 
 export const revalidate = 60;
 
+export async function generateStaticParams() {
+  try {
+    const categories = await api.categories();
+    return categories.map((c) => ({ slug: c.slug }));
+  } catch {
+    return [];
+  }
+}
+
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   let category: Awaited<ReturnType<typeof api.category>>;

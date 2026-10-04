@@ -6,7 +6,23 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
-  list(opts: { categorySlug?: string; fulfillment?: string; activeOnly?: boolean; search?: string }) {
+  private cache = new Map<string, { data: unknown; expiresAt: number }>();
+  private readonly TTL_MS = 120_000; // 2 minutes in-memory cache
+
+  clearCache() {
+    this.cache.clear();
+  }
+
+  async list(opts: { categorySlug?: string; fulfillment?: string; activeOnly?: boolean; search?: string }) {
+    const isSearch = !!opts.search?.trim();
+    const key = `list:${JSON.stringify(opts)}`;
+    if (!isSearch) {
+      const hit = this.cache.get(key);
+      if (hit && hit.expiresAt > Date.now()) {
+        return hit.data as Awaited<ReturnType<typeof this.prisma.product.findMany>>;
+      }
+    }
+
     const searchFilter = opts.search?.trim()
       ? {
           OR: [
@@ -16,7 +32,7 @@ export class ProductsService {
         }
       : {};
 
-    return this.prisma.product.findMany({
+    const data = await this.prisma.product.findMany({
       where: {
         ...(opts.activeOnly !== false ? { isActive: true } : {}),
         ...(opts.categorySlug ? { category: { slug: opts.categorySlug } } : {}),
@@ -37,9 +53,19 @@ export class ProductsService {
         },
       },
     });
+
+    if (!isSearch) {
+      this.cache.set(key, { data, expiresAt: Date.now() + this.TTL_MS });
+    }
+    return data;
   }
 
   async bySlug(slug: string) {
+    const key = `slug:${slug}`;
+    const hit = this.cache.get(key);
+    if (hit && hit.expiresAt > Date.now()) {
+      return hit.data as any;
+    }
     const product = await this.prisma.product.findUnique({
       where: { slug },
       include: {
@@ -85,7 +111,7 @@ export class ProductsService {
 
     const optionGroups = [...byId.values()].sort((a, b) => a.displayOrder - b.displayOrder);
 
-    return {
+    const result = {
       ...product,
       optionGroups,
       category: {
@@ -95,6 +121,8 @@ export class ProductsService {
         fulfillmentType: product.category.fulfillmentType,
       },
     };
+    this.cache.set(key, { data: result, expiresAt: Date.now() + this.TTL_MS });
+    return result;
   }
 
   async create(data: {
@@ -113,6 +141,7 @@ export class ProductsService {
     piecesPerPack?: number | null;
     optionGroupIds?: string[];
   }) {
+    this.clearCache();
     const { optionGroupIds, ...rest } = data;
     return this.prisma.product.create({
       data: {
@@ -144,6 +173,7 @@ export class ProductsService {
       optionGroupIds: string[];
     }>,
   ) {
+    this.clearCache();
     const existing = await this.prisma.product.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException();
     const { optionGroupIds, ...rest } = data;
@@ -165,11 +195,13 @@ export class ProductsService {
   }
 
   async remove(id: string) {
+    this.clearCache();
     await this.prisma.product.update({ where: { id }, data: { isActive: false } });
     return { ok: true };
   }
 
   async reorder(items: { id: string; displayOrder: number }[]) {
+    this.clearCache();
     await this.prisma.$transaction(
       items.map((item) =>
         this.prisma.product.update({

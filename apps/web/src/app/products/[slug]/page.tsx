@@ -6,6 +6,15 @@ import { ProductOptionsForm } from '@/components/product-options-form';
 
 export const revalidate = 60;
 
+export async function generateStaticParams() {
+  try {
+    const products = await api.products();
+    return products.map((p) => ({ slug: p.slug }));
+  } catch {
+    return [];
+  }
+}
+
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   let product: Awaited<ReturnType<typeof api.product>>;

@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description: 'Order hot desi & fast food now, or stock your freezer — BigBites Lahore.',
 };
 
+export const revalidate = 60;
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   let categories: Awaited<ReturnType<typeof api.categories>> = [];
   try {

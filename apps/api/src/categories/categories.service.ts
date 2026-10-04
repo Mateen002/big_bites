@@ -21,8 +21,21 @@ const optionInclude = {
 export class CategoriesService {
   constructor(private prisma: PrismaService) {}
 
-  list(opts: { fulfillment?: FulfillmentType; activeOnly?: boolean }) {
-    return this.prisma.category.findMany({
+  private cache = new Map<string, { data: unknown; expiresAt: number }>();
+  private readonly TTL_MS = 120_000; // 2 minutes in-memory cache
+
+  clearCache() {
+    this.cache.clear();
+  }
+
+  async list(opts: { fulfillment?: FulfillmentType; activeOnly?: boolean }) {
+    const key = `list:${JSON.stringify(opts)}`;
+    const hit = this.cache.get(key);
+    if (hit && hit.expiresAt > Date.now()) {
+      return hit.data as Awaited<ReturnType<typeof this.prisma.category.findMany>>;
+    }
+
+    const data = await this.prisma.category.findMany({
       where: {
         ...(opts.activeOnly !== false ? { isActive: true } : {}),
         ...(opts.fulfillment ? { fulfillmentType: opts.fulfillment } : {}),
@@ -37,9 +50,18 @@ export class CategoriesService {
         _count: { select: { products: true } },
       },
     });
+
+    this.cache.set(key, { data, expiresAt: Date.now() + this.TTL_MS });
+    return data;
   }
 
   async bySlug(slug: string) {
+    const key = `slug:${slug}`;
+    const hit = this.cache.get(key);
+    if (hit && hit.expiresAt > Date.now()) {
+      return hit.data as any;
+    }
+
     const category = await this.prisma.category.findUnique({
       where: { slug },
       include: {
@@ -52,10 +74,12 @@ export class CategoriesService {
       },
     });
     if (!category || !category.isActive) throw new NotFoundException('Category not found');
-    return {
+    const result = {
       ...category,
       optionGroups: category.optionGroups.map((l) => l.optionGroup),
     };
+    this.cache.set(key, { data: result, expiresAt: Date.now() + this.TTL_MS });
+    return result;
   }
 
   async create(data: {
@@ -69,6 +93,7 @@ export class CategoriesService {
     parentId?: string | null;
     optionGroupIds?: string[];
   }) {
+    this.clearCache();
     const { optionGroupIds, ...rest } = data;
     return this.prisma.category.create({
       data: {
@@ -95,6 +120,7 @@ export class CategoriesService {
       optionGroupIds: string[];
     }>,
   ) {
+    this.clearCache();
     const existing = await this.prisma.category.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException();
 
@@ -117,6 +143,7 @@ export class CategoriesService {
   }
 
   async remove(id: string) {
+    this.clearCache();
     await this.prisma.category.update({
       where: { id },
       data: { isActive: false },
@@ -125,6 +152,7 @@ export class CategoriesService {
   }
 
   async reorder(items: { id: string; displayOrder: number }[]) {
+    this.clearCache();
     await this.prisma.$transaction(
       items.map((item) =>
         this.prisma.category.update({
