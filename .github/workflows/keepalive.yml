@@ -1,0 +1,21 @@
+name: Keep Render Backend Awake
+
+on:
+  schedule:
+    # Run every 10 minutes to prevent Render free tier from spinning down (15 min inactivity limit)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping BigBites API Healthcheck
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://big-bites-f76j.onrender.com/api/v1/health)
+          echo "Healthcheck response status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -eq 200 ]; then
+            echo "Render API is online and awake!"
+          else
+            echo "API returned status $HTTP_STATUS, waking up..."
+          fi
