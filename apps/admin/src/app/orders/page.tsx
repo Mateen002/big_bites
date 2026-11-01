@@ -92,6 +92,24 @@ export default function OrdersPage() {
   // Print Ticket Modal State
   const [printOrder, setPrintOrder] = useState<AdminOrder | null>(null);
 
+  // Mobile Alerts Modal State
+  const [isTelegramModalOpen, setIsTelegramModalOpen] = useState(false);
+  const [telegramStatus, setTelegramStatus] = useState<string>('');
+  const [testingTelegram, setTestingTelegram] = useState(false);
+
+  async function handleTestTelegram() {
+    setTestingTelegram(true);
+    setTelegramStatus('');
+    try {
+      const res = await adminApi.testTelegram();
+      setTelegramStatus(`✅ ${res.message}`);
+    } catch (err) {
+      setTelegramStatus(`❌ ${err instanceof Error ? err.message : 'Failed to test Telegram'}`);
+    } finally {
+      setTestingTelegram(false);
+    }
+  }
+
   // Keep track of known order IDs to detect newly arrived orders
   const knownOrderIdsRef = useRef<Set<string>>(new Set(cachedOrders.map((o) => o.id)));
   const soundEnabledRef = useRef(soundEnabled);
@@ -276,6 +294,19 @@ export default function OrdersPage() {
             title="Refresh now"
           >
             🔄 Sync
+          </button>
+
+          {/* Mobile Alerts Modal Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsTelegramModalOpen(true);
+              setTelegramStatus('');
+            }}
+            className="rounded-xl border border-sky-500/20 bg-sky-500/10 px-3.5 py-2.5 text-xs font-semibold text-sky-300 hover:bg-sky-500/20"
+            title="Configure Telegram mobile phone push alerts"
+          >
+            📱 Phone Alerts
           </button>
 
           {/* Search Box */}
@@ -549,6 +580,77 @@ export default function OrdersPage() {
           <p className="max-w-[80mm] mx-auto pt-4 text-center text-[10px] text-gray-500">
             *** End of Kitchen Ticket ***
           </p>
+        </div>
+      )}
+
+      {/* Telegram Mobile Alerts Setup Modal */}
+      {isTelegramModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl border border-white/15 bg-ink-900 p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="text-2xl">📱</span>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Tier 2: Mobile Phone Push Alerts</h3>
+                  <p className="text-xs text-stone-400">Receive instant push notifications for new orders on Telegram.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsTelegramModalOpen(false)}
+                className="rounded-lg p-1 text-stone-400 hover:bg-white/10 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-4 text-sm text-stone-300">
+              <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 text-xs text-sky-200 space-y-1">
+                <p className="font-bold">⚡ How It Works (100% Free & Unlimited):</p>
+                <p>Whenever a customer places an order, your server sends an instant notification to your Telegram staff group or personal chat with loud sound alert on your phone.</p>
+              </div>
+
+              <div className="space-y-2 text-xs">
+                <p className="font-semibold text-white">Quick 60-second setup on your VPS:</p>
+                <ol className="list-decimal pl-4 space-y-1.5 text-stone-400">
+                  <li>Open Telegram and message <strong className="text-white">@BotFather</strong> to create a free bot and get your token.</li>
+                  <li>Message your bot or add it to a staff group, then get your chat ID (via <strong className="text-white">@userinfobot</strong>).</li>
+                  <li>Add these 2 lines into your <code className="text-accent">/var/www/bigbites/.env</code> file:
+                    <pre className="mt-1 rounded-lg bg-black/50 p-2 font-mono text-[11px] text-amber-300">
+                      TELEGRAM_BOT_TOKEN="your_bot_token_here"<br />
+                      TELEGRAM_CHAT_ID="your_chat_id_here"
+                    </pre>
+                  </li>
+                  <li>Restart PM2: <code className="text-accent">pm2 restart bigbites-api</code></li>
+                </ol>
+              </div>
+
+              {telegramStatus && (
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs">
+                  {telegramStatus}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                <button
+                  type="button"
+                  disabled={testingTelegram}
+                  onClick={handleTestTelegram}
+                  className="rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-sky-500 disabled:opacity-50"
+                >
+                  {testingTelegram ? 'Sending Test…' : '🔔 Send Test Alert to Phone'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsTelegramModalOpen(false)}
+                  className="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold text-stone-400 hover:text-white"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

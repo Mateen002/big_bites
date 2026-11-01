@@ -125,6 +125,12 @@ export class OrdersController {
   }
 
   @UseGuards(AdminAuthGuard)
+  @Post('test-telegram')
+  testTelegram() {
+    return this.orders.sendTestTelegramAlert();
+  }
+
+  @UseGuards(AdminAuthGuard)
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body() dto: StatusDto) {
     return this.orders.updateStatus(id, dto.status);

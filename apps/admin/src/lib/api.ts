@@ -126,6 +126,8 @@ export const adminApi = {
   orders: () => adminFetch<AdminOrder[]>('/orders'),
   updateOrderStatus: (id: string, status: string) =>
     adminFetch(`/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  testTelegram: () =>
+    adminFetch<{ ok: boolean; message: string }>('/orders/test-telegram', { method: 'POST' }),
   analytics: (days = 30) =>
     adminFetch<AnalyticsOverview>(`/analytics/overview?days=${days}`),
   uploadImage: async (file: File) => {

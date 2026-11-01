@@ -228,6 +228,12 @@ export class OrdersService {
     this.clearCache();
     this.trackingCache.set(order.id, { data: order, expiresAt: Date.now() + 30_000 });
     this.trackingCache.set(order.orderNumber, { data: order, expiresAt: Date.now() + 30_000 });
+
+    // Tier 2: Fire-and-forget instant mobile dispatch alert
+    this.sendTelegramAlert(order).catch((err) => {
+      console.warn('Telegram notification error:', err);
+    });
+
     return { ...order, payment };
   }
 
@@ -332,5 +338,73 @@ export class OrdersService {
       data: { status },
       include: { items: true, deliveryZone: true },
     });
+  }
+
+  // --- Tier 2: Mobile Order Notifications (Telegram Bot) ---
+
+  async sendTestTelegramAlert() {
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+    if (!token || !chatId) {
+      throw new BadRequestException('TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not configured in .env');
+    }
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: `✅ *BigBites Lahore: Telegram Notifications Active!*\nYour bot is successfully connected. You will receive live customer order alerts here with sound.`,
+        parse_mode: 'Markdown',
+      }),
+    });
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new BadRequestException(`Telegram API error: ${errBody}`);
+    }
+    return { ok: true, message: 'Test message sent to your Telegram chat!' };
+  }
+
+  private async sendTelegramAlert(order: any) {
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+    if (!token || !chatId) return;
+
+    try {
+      const itemsList =
+        order.items
+          ?.map((i: any) => `• *${i.quantity}×* ${i.productName}`)
+          .join('\n') || '—';
+
+      const text = [
+        `🔔 *NEW BIGBITES ORDER RECEIVED!*`,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        `📦 *Order:* \`#${order.orderNumber}\``,
+        `👤 *Customer:* ${order.customerName}`,
+        `📞 *Phone:* \`${order.customerPhone}\``,
+        `📍 *Zone:* ${order.deliveryZone?.name ?? 'Lahore'}`,
+        order.addressLine ? `🏠 *Address:* ${order.addressLine}` : '',
+        `💰 *Total:* Rs ${Number(order.totalPkr).toLocaleString()} (${order.paymentMethod})`,
+        ``,
+        `📋 *Items:*`,
+        itemsList,
+        order.notes ? `\n📝 *Customer Note:* "${order.notes}"` : '',
+        `━━━━━━━━━━━━━━━━━━━━`,
+        `🕒 ${new Date(order.createdAt).toLocaleString('en-PK', { timeZone: 'Asia/Karachi' })}`,
+      ]
+        .filter(Boolean)
+        .join('\n');
+
+      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          parse_mode: 'Markdown',
+        }),
+      });
+    } catch (err) {
+      console.warn('Telegram notification dispatch failed:', err);
+    }
   }
 }
