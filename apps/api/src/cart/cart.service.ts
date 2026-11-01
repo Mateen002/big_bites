@@ -43,6 +43,23 @@ export class CartService {
     private redis: RedisService,
   ) {}
 
+  private productCache = new Map<
+    string,
+    {
+      product: any;
+      categoryGroups: any[];
+      expiresAt: number;
+    }
+  >();
+
+  clearProductCache(productId?: string) {
+    if (productId) {
+      this.productCache.delete(productId);
+    } else {
+      this.productCache.clear();
+    }
+  }
+
   private key(sessionId: string) {
     return `cart:${sessionId}`;
   }
@@ -77,34 +94,50 @@ export class CartService {
       notes?: string;
     },
   ) {
-    const product = await this.prisma.product.findUnique({
-      where: { id: input.productId },
-      include: {
-        category: true,
-        optionGroups: { include: { optionGroup: { include: { values: true } } } },
-      },
-    });
-    if (!product || !product.isActive) throw new NotFoundException('Product not found');
+    const cacheKey = input.productId;
+    const hit = this.productCache.get(cacheKey);
+    let product: any;
+    let categoryGroups: any[];
 
-    const categoryGroups = await this.prisma.categoryOptionGroup.findMany({
-      where: { categoryId: product.categoryId },
-      include: { optionGroup: { include: { values: true } } },
-    });
+    if (hit && hit.expiresAt > Date.now()) {
+      product = hit.product;
+      categoryGroups = hit.categoryGroups;
+    } else {
+      product = await this.prisma.product.findUnique({
+        where: { id: input.productId },
+        include: {
+          category: true,
+          optionGroups: { include: { optionGroup: { include: { values: true } } } },
+        },
+      });
+      if (!product || !product.isActive) throw new NotFoundException('Product not found');
+
+      categoryGroups = await this.prisma.categoryOptionGroup.findMany({
+        where: { categoryId: product.categoryId },
+        include: { optionGroup: { include: { values: true } } },
+      });
+
+      this.productCache.set(cacheKey, {
+        product,
+        categoryGroups,
+        expiresAt: Date.now() + 120_000,
+      });
+    }
 
     const groups = new Map(
       [
-        ...categoryGroups.map((g) => g.optionGroup),
-        ...product.optionGroups.map((g) => g.optionGroup),
-      ].map((g) => [g.id, g]),
+        ...categoryGroups.map((g: any) => g.optionGroup),
+        ...product.optionGroups.map((g: any) => g.optionGroup),
+      ].map((g: any) => [g.id, g]),
     );
 
     const selections: CartSelection[] = [];
     let optionsExtra = 0;
 
     for (const sel of input.selections || []) {
-      const group = groups.get(sel.optionGroupId);
+      const group: any = groups.get(sel.optionGroupId);
       if (!group) throw new BadRequestException('Invalid option group');
-      const value = group.values.find((v) => v.id === sel.optionValueId && v.isActive);
+      const value = group.values.find((v: any) => v.id === sel.optionValueId && v.isActive);
       if (!value) throw new BadRequestException('Invalid option value');
       const qty = sel.quantity || 1;
       optionsExtra += value.priceDeltaPkr * qty;

@@ -22,6 +22,13 @@ export class OrdersService {
     private payments: PaymentsService,
   ) {}
 
+  private cache = new Map<string, { data: unknown; expiresAt: number }>();
+  private readonly TTL_MS = 10_000;
+
+  clearCache() {
+    this.cache.clear();
+  }
+
   private orderNumber() {
     const d = new Date();
     const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
@@ -195,6 +202,7 @@ export class OrdersService {
     });
 
     await this.cart.clear(sessionId);
+    this.clearCache();
     return { ...order, payment };
   }
 
@@ -237,8 +245,13 @@ export class OrdersService {
     });
   }
 
-  list(status?: OrderStatus) {
-    return this.prisma.order.findMany({
+  async list(status?: OrderStatus) {
+    const key = `list:${status || 'ALL'}`;
+    const hit = this.cache.get(key);
+    if (hit && hit.expiresAt > Date.now()) {
+      return hit.data as Awaited<ReturnType<typeof this.prisma.order.findMany>>;
+    }
+    const data = await this.prisma.order.findMany({
       where: status ? { status } : undefined,
       orderBy: { createdAt: 'desc' },
       include: {
@@ -247,6 +260,8 @@ export class OrdersService {
       },
       take: 100,
     });
+    this.cache.set(key, { data, expiresAt: Date.now() + this.TTL_MS });
+    return data;
   }
 
   listForCustomer(customerId: string) {
@@ -278,6 +293,7 @@ export class OrdersService {
   }
 
   async updateStatus(id: string, status: OrderStatus) {
+    this.clearCache();
     return this.prisma.order.update({
       where: { id },
       data: { status },

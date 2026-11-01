@@ -6,26 +6,46 @@ import { PrismaService } from '../prisma/prisma.service';
 export class OptionsService {
   constructor(private prisma: PrismaService) {}
 
-  list() {
-    return this.prisma.optionGroup.findMany({
+  private cache = new Map<string, { data: unknown; expiresAt: number }>();
+  private readonly TTL_MS = 120_000;
+
+  clearCache() {
+    this.cache.clear();
+  }
+
+  async list() {
+    const key = 'list';
+    const hit = this.cache.get(key);
+    if (hit && hit.expiresAt > Date.now()) {
+      return hit.data as Awaited<ReturnType<typeof this.prisma.optionGroup.findMany>>;
+    }
+    const data = await this.prisma.optionGroup.findMany({
       orderBy: { displayOrder: 'asc' },
       include: {
         values: { orderBy: { displayOrder: 'asc' } },
         _count: { select: { categories: true, products: true } },
       },
     });
+    this.cache.set(key, { data, expiresAt: Date.now() + this.TTL_MS });
+    return data;
   }
 
   async byId(id: string) {
+    const key = `byId:${id}`;
+    const hit = this.cache.get(key);
+    if (hit && hit.expiresAt > Date.now()) {
+      return hit.data as any;
+    }
     const group = await this.prisma.optionGroup.findUnique({
       where: { id },
       include: { values: { orderBy: { displayOrder: 'asc' } } },
     });
     if (!group) throw new NotFoundException();
+    this.cache.set(key, { data: group, expiresAt: Date.now() + this.TTL_MS });
     return group;
   }
 
-  create(data: {
+  async create(data: {
     name: string;
     slug: string;
     selectType: OptionSelectType;
@@ -40,6 +60,7 @@ export class OptionsService {
       isActive?: boolean;
     }[];
   }) {
+    this.clearCache();
     return this.prisma.optionGroup.create({
       data: {
         name: data.name,
@@ -84,6 +105,7 @@ export class OptionsService {
     const existing = await this.prisma.optionGroup.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException();
 
+    this.clearCache();
     const { values, ...rest } = data;
     return this.prisma.$transaction(async (tx) => {
       if (values) {
@@ -107,6 +129,7 @@ export class OptionsService {
   }
 
   async remove(id: string) {
+    this.clearCache();
     await this.prisma.optionGroup.delete({ where: { id } });
     return { ok: true };
   }

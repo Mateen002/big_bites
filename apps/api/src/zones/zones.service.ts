@@ -5,14 +5,28 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ZonesService {
   constructor(private prisma: PrismaService) {}
 
-  list(activeOnly: boolean) {
-    return this.prisma.deliveryZone.findMany({
+  private cache = new Map<string, { data: unknown; expiresAt: number }>();
+  private readonly TTL_MS = 120_000;
+
+  clearCache() {
+    this.cache.clear();
+  }
+
+  async list(activeOnly: boolean) {
+    const key = `zones:${activeOnly}`;
+    const hit = this.cache.get(key);
+    if (hit && hit.expiresAt > Date.now()) {
+      return hit.data as Awaited<ReturnType<typeof this.prisma.deliveryZone.findMany>>;
+    }
+    const data = await this.prisma.deliveryZone.findMany({
       where: activeOnly ? { isActive: true } : undefined,
       orderBy: { displayOrder: 'asc' },
     });
+    this.cache.set(key, { data, expiresAt: Date.now() + this.TTL_MS });
+    return data;
   }
 
-  create(data: {
+  async create(data: {
     name: string;
     slug: string;
     feePkr: number;
@@ -21,6 +35,7 @@ export class ZonesService {
     isActive?: boolean;
     displayOrder?: number;
   }) {
+    this.clearCache();
     return this.prisma.deliveryZone.create({ data });
   }
 
@@ -37,6 +52,7 @@ export class ZonesService {
     }>,
   ) {
     try {
+      this.clearCache();
       return await this.prisma.deliveryZone.update({ where: { id }, data });
     } catch {
       throw new NotFoundException();
@@ -44,6 +60,7 @@ export class ZonesService {
   }
 
   async remove(id: string) {
+    this.clearCache();
     await this.prisma.deliveryZone.update({
       where: { id },
       data: { isActive: false },
@@ -52,6 +69,7 @@ export class ZonesService {
   }
 
   async reorder(items: { id: string; displayOrder: number }[]) {
+    this.clearCache();
     await this.prisma.$transaction(
       items.map((item) =>
         this.prisma.deliveryZone.update({
