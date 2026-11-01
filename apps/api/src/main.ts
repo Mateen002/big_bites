@@ -38,6 +38,12 @@ async function bootstrap() {
       if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
         return callback(null, true);
       }
+      if (/^https?:\/\/([a-z0-9-]+\.)*bigbites\.pk(:\d+)?$/i.test(origin)) {
+        return callback(null, true);
+      }
+      if (/^https?:\/\/116\.203\.215\.86(:\d+)?$/.test(origin)) {
+        return callback(null, true);
+      }
       const allowed = (process.env.CORS_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean);
       if (allowed.includes(origin)) {
         return callback(null, true);
