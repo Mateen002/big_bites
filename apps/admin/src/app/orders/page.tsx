@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { adminApi, type AdminOrder } from '@/lib/api';
 import { formatPkr } from '@/components/charts';
 
@@ -75,6 +75,40 @@ function playKitchenBuzzer() {
   }
 }
 
+// Format Pakistani phone numbers to clean international format for WhatsApp wa.me links
+function cleanPhoneForWhatsApp(phone?: string | null): string {
+  if (!phone) return '';
+  const digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('92')) return digits;
+  if (digits.startsWith('0')) return `92${digits.slice(1)}`;
+  if (digits.length === 10) return `92${digits}`;
+  return digits;
+}
+
+function generateWhatsAppOrderSlip(order: AdminOrder): string {
+  const itemsText = order.items
+    .map((i) => `• *${i.quantity}×* ${i.productName}`)
+    .join('\n');
+
+  return `🔔 *BIGBITES KITCHEN ORDER #${order.orderNumber}*
+━━━━━━━━━━━━━━━━━━
+👤 *Customer:* ${order.customerName}
+📞 *Phone:* ${order.customerPhone}
+📍 *Zone:* ${order.deliveryZone?.name ?? 'Standard'}
+${order.addressLine ? `🏠 *Address:* ${order.addressLine}\n` : ''}💰 *Total:* Rs ${order.totalPkr.toLocaleString()} (${order.paymentMethod})
+
+📋 *Items:*
+${itemsText}
+${order.notes ? `\n📝 *Notes:* "${order.notes}"\n` : ''}━━━━━━━━━━━━━━━━━━
+🕒 ${new Date(order.createdAt).toLocaleString('en-PK')}`;
+}
+
+function generateWhatsAppCustomerMsg(order: AdminOrder): string {
+  return `Assalam-o-Alaikum ${order.customerName}! 🍽
+Your BigBites Order #${order.orderNumber} (Rs ${order.totalPkr.toLocaleString()}) has been confirmed and is being prepared fresh in our kitchen!
+Our rider will contact you upon dispatch. Thank you for choosing BigBites!`;
+}
+
 let cachedOrders: AdminOrder[] = [];
 
 export default function OrdersPage() {
@@ -89,38 +123,40 @@ export default function OrdersPage() {
   const [autoSync, setAutoSync] = useState(true);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
 
+  // Dynamic Settings (Kitchen & Manager Phone Numbers)
+  const [kitchenPhone, setKitchenPhone] = useState('');
+  const [managerPhone, setManagerPhone] = useState('');
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsStatus, setSettingsStatus] = useState('');
+
   // Print Ticket Modal State
   const [printOrder, setPrintOrder] = useState<AdminOrder | null>(null);
 
   // Mobile Alerts Modal State
-  const [isTelegramModalOpen, setIsTelegramModalOpen] = useState(false);
+  const [isAlertsModalOpen, setIsAlertsModalOpen] = useState(false);
+  const [alertsTab, setAlertsTab] = useState<'whatsapp' | 'telegram'>('whatsapp');
   const [telegramStatus, setTelegramStatus] = useState<string>('');
   const [testingTelegram, setTestingTelegram] = useState(false);
-
-  async function handleTestTelegram() {
-    setTestingTelegram(true);
-    setTelegramStatus('');
-    try {
-      const res = await adminApi.testTelegram();
-      setTelegramStatus(`✅ ${res.message}`);
-    } catch (err) {
-      setTelegramStatus(`❌ ${err instanceof Error ? err.message : 'Failed to test Telegram'}`);
-    } finally {
-      setTestingTelegram(false);
-    }
-  }
 
   // Keep track of known order IDs to detect newly arrived orders
   const knownOrderIdsRef = useRef<Set<string>>(new Set(cachedOrders.map((o) => o.id)));
   const soundEnabledRef = useRef(soundEnabled);
   soundEnabledRef.current = soundEnabled;
 
-  // Initialize sound preference from localStorage
+  // Initialize sound preference from localStorage & load dynamic settings
   useEffect(() => {
     const saved = localStorage.getItem('bigbites_kitchen_sound');
     if (saved === 'true') {
       setSoundEnabled(true);
     }
+
+    // Load dynamic phone settings from API
+    adminApi.settings()
+      .then((s) => {
+        setKitchenPhone(s.kitchen_phone || '');
+        setManagerPhone(s.manager_phone || '');
+      })
+      .catch(() => {});
   }, []);
 
   function toggleSound() {
@@ -129,7 +165,6 @@ export default function OrdersPage() {
     localStorage.setItem('bigbites_kitchen_sound', String(next));
     if (next) {
       playKitchenBuzzer();
-      // Request desktop notifications if not granted
       if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission();
       }
@@ -142,16 +177,13 @@ export default function OrdersPage() {
       const fresh = await adminApi.orders();
       setLastSyncTime(new Date());
 
-      // Check for newly arrived orders (orders not in known set)
       if (knownOrderIdsRef.current.size > 0) {
         const newOrders = fresh.filter((o) => !knownOrderIdsRef.current.has(o.id));
         if (newOrders.length > 0) {
-          // Play loud chime if sound is enabled
           if (soundEnabledRef.current) {
             playKitchenBuzzer();
           }
 
-          // Trigger Desktop Notification if permitted
           if ('Notification' in window && Notification.permission === 'granted') {
             const first = newOrders[0];
             new Notification(`🚨 BigBites: New Order ${first.orderNumber}`, {
@@ -162,7 +194,6 @@ export default function OrdersPage() {
         }
       }
 
-      // Update known set
       knownOrderIdsRef.current = new Set(fresh.map((o) => o.id));
       cachedOrders = fresh;
       setItems(fresh);
@@ -173,7 +204,6 @@ export default function OrdersPage() {
     }
   }
 
-  // Initial load
   useEffect(() => {
     load();
   }, []);
@@ -229,12 +259,10 @@ export default function OrdersPage() {
     }
   }
 
-  // Quick Action: Acknowledge & Start Cooking
   async function acknowledgeOrder(order: AdminOrder) {
     await updateStatus(order.id, 'PREPARING');
   }
 
-  // Quick Action: Advance to next logical workflow step
   async function advanceWorkflow(order: AdminOrder) {
     if (order.status === 'PENDING' || order.status === 'CONFIRMED') {
       await updateStatus(order.id, 'PREPARING');
@@ -250,6 +278,59 @@ export default function OrdersPage() {
     setTimeout(() => {
       window.print();
     }, 150);
+  }
+
+  // Save Dynamic Notification Phone Numbers
+  async function handleSaveSettings(e: FormEvent) {
+    e.preventDefault();
+    setSavingSettings(true);
+    setSettingsStatus('');
+    try {
+      const updated = await adminApi.updateSettings({
+        kitchen_phone: kitchenPhone.trim(),
+        manager_phone: managerPhone.trim(),
+      });
+      setKitchenPhone(updated.kitchen_phone || '');
+      setManagerPhone(updated.manager_phone || '');
+      setSettingsStatus('✅ Notification phone numbers saved successfully!');
+    } catch (err) {
+      setSettingsStatus(`❌ ${err instanceof Error ? err.message : 'Save failed'}`);
+    } finally {
+      setSavingSettings(false);
+    }
+  }
+
+  // Dispatch Order to Kitchen WhatsApp
+  function dispatchToKitchenWhatsApp(order: AdminOrder) {
+    const targetPhone = cleanPhoneForWhatsApp(kitchenPhone);
+    if (!targetPhone) {
+      setIsAlertsModalOpen(true);
+      setAlertsTab('whatsapp');
+      setSettingsStatus('⚠️ Please configure your Kitchen Phone Number below first!');
+      return;
+    }
+    const text = encodeURIComponent(generateWhatsAppOrderSlip(order));
+    window.open(`https://wa.me/${targetPhone}?text=${text}`, '_blank');
+  }
+
+  // Dispatch Customer WhatsApp Update
+  function dispatchToCustomerWhatsApp(order: AdminOrder) {
+    const targetPhone = cleanPhoneForWhatsApp(order.customerPhone);
+    const text = encodeURIComponent(generateWhatsAppCustomerMsg(order));
+    window.open(`https://wa.me/${targetPhone}?text=${text}`, '_blank');
+  }
+
+  async function handleTestTelegram() {
+    setTestingTelegram(true);
+    setTelegramStatus('');
+    try {
+      const res = await adminApi.testTelegram();
+      setTelegramStatus(`✅ ${res.message}`);
+    } catch (err) {
+      setTelegramStatus(`❌ ${err instanceof Error ? err.message : 'Failed to test Telegram'}`);
+    } finally {
+      setTestingTelegram(false);
+    }
   }
 
   return (
@@ -270,7 +351,7 @@ export default function OrdersPage() {
           </p>
         </div>
 
-        {/* Live Audio & Sync Action Controls */}
+        {/* Live Audio, Phone Settings, and Search Controls */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Sound Alert Toggle */}
           <button
@@ -286,6 +367,26 @@ export default function OrdersPage() {
             <span>{soundEnabled ? 'Audio Chime: ON (Testing)' : 'Audio Chime: OFF'}</span>
           </button>
 
+          {/* Dynamic Phone Alerts Settings Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsAlertsModalOpen(true);
+              setSettingsStatus('');
+              setTelegramStatus('');
+            }}
+            className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2.5 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
+            title="Configure dynamic phone numbers for WhatsApp & Telegram alerts"
+          >
+            <span>📱</span>
+            <span>Phone & WhatsApp Alerts</span>
+            {kitchenPhone && (
+              <span className="rounded bg-emerald-500/20 px-1.5 py-0.2 text-[10px] text-emerald-300">
+                Active
+              </span>
+            )}
+          </button>
+
           {/* Manual Refresh Button */}
           <button
             type="button"
@@ -294,19 +395,6 @@ export default function OrdersPage() {
             title="Refresh now"
           >
             🔄 Sync
-          </button>
-
-          {/* Mobile Alerts Modal Button */}
-          <button
-            type="button"
-            onClick={() => {
-              setIsTelegramModalOpen(true);
-              setTelegramStatus('');
-            }}
-            className="rounded-xl border border-sky-500/20 bg-sky-500/10 px-3.5 py-2.5 text-xs font-semibold text-sky-300 hover:bg-sky-500/20"
-            title="Configure Telegram mobile phone push alerts"
-          >
-            📱 Phone Alerts
           </button>
 
           {/* Search Box */}
@@ -499,7 +587,29 @@ export default function OrdersPage() {
                     </button>
                   )}
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {/* One-Tap WhatsApp to Kitchen Phone */}
+                    <button
+                      type="button"
+                      onClick={() => dispatchToKitchenWhatsApp(o)}
+                      className="flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/20"
+                      title={kitchenPhone ? `Send order slip to kitchen (${kitchenPhone})` : 'Configure kitchen phone number'}
+                    >
+                      <span>💬</span>
+                      <span>WhatsApp Kitchen</span>
+                    </button>
+
+                    {/* One-Tap WhatsApp to Customer Phone */}
+                    <button
+                      type="button"
+                      onClick={() => dispatchToCustomerWhatsApp(o)}
+                      className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-stone-300 transition hover:bg-white/10 hover:text-white"
+                      title={`Message customer at ${o.customerPhone}`}
+                    >
+                      <span>💬</span>
+                      <span>Customer</span>
+                    </button>
+
                     {/* Print Kitchen Slip Button */}
                     <button
                       type="button"
@@ -512,7 +622,7 @@ export default function OrdersPage() {
 
                     {/* Full Status Dropdown */}
                     <select
-                      className="input w-auto min-w-[150px] py-1.5 text-xs"
+                      className="input w-auto min-w-[140px] py-1.5 text-xs"
                       value={o.status}
                       disabled={busyId === o.id}
                       onChange={(e) => updateStatus(o.id, e.target.value)}
@@ -583,73 +693,173 @@ export default function OrdersPage() {
         </div>
       )}
 
-      {/* Telegram Mobile Alerts Setup Modal */}
-      {isTelegramModalOpen && (
+      {/* Dynamic Phone Numbers & Mobile Alerts Setup Modal */}
+      {isAlertsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
           <div className="w-full max-w-lg rounded-2xl border border-white/15 bg-ink-900 p-6 shadow-2xl">
+            {/* Header */}
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div className="flex items-center gap-2.5">
                 <span className="text-2xl">📱</span>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Tier 2: Mobile Phone Push Alerts</h3>
-                  <p className="text-xs text-stone-400">Receive instant push notifications for new orders on Telegram.</p>
+                  <h3 className="text-lg font-bold text-white">Mobile Order Notifications</h3>
+                  <p className="text-xs text-stone-400">Configure phone numbers for WhatsApp & Telegram alerts.</p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setIsTelegramModalOpen(false)}
+                onClick={() => setIsAlertsModalOpen(false)}
                 className="rounded-lg p-1 text-stone-400 hover:bg-white/10 hover:text-white"
               >
                 ✕
               </button>
             </div>
 
-            <div className="mt-4 space-y-4 text-sm text-stone-300">
-              <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 text-xs text-sky-200 space-y-1">
-                <p className="font-bold">⚡ How It Works (100% Free & Unlimited):</p>
-                <p>Whenever a customer places an order, your server sends an instant notification to your Telegram staff group or personal chat with loud sound alert on your phone.</p>
-              </div>
-
-              <div className="space-y-2 text-xs">
-                <p className="font-semibold text-white">Quick 60-second setup on your VPS:</p>
-                <ol className="list-decimal pl-4 space-y-1.5 text-stone-400">
-                  <li>Open Telegram and message <strong className="text-white">@BotFather</strong> to create a free bot and get your token.</li>
-                  <li>Message your bot or add it to a staff group, then get your chat ID (via <strong className="text-white">@userinfobot</strong>).</li>
-                  <li>Add these 2 lines into your <code className="text-accent">/var/www/bigbites/.env</code> file:
-                    <pre className="mt-1 rounded-lg bg-black/50 p-2 font-mono text-[11px] text-amber-300">
-                      TELEGRAM_BOT_TOKEN="your_bot_token_here"<br />
-                      TELEGRAM_CHAT_ID="your_chat_id_here"
-                    </pre>
-                  </li>
-                  <li>Restart PM2: <code className="text-accent">pm2 restart bigbites-api</code></li>
-                </ol>
-              </div>
-
-              {telegramStatus && (
-                <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs">
-                  {telegramStatus}
-                </div>
-              )}
-
-              <div className="flex items-center justify-between pt-3 border-t border-white/10">
-                <button
-                  type="button"
-                  disabled={testingTelegram}
-                  onClick={handleTestTelegram}
-                  className="rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-sky-500 disabled:opacity-50"
-                >
-                  {testingTelegram ? 'Sending Test…' : '🔔 Send Test Alert to Phone'}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsTelegramModalOpen(false)}
-                  className="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold text-stone-400 hover:text-white"
-                >
-                  Close
-                </button>
-              </div>
+            {/* Modal Tabs */}
+            <div className="mt-4 flex border-b border-white/10 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setAlertsTab('whatsapp')}
+                className={`pb-2.5 border-b-2 transition ${
+                  alertsTab === 'whatsapp'
+                    ? 'border-emerald-400 text-emerald-400'
+                    : 'border-transparent text-stone-400 hover:text-stone-200'
+                }`}
+              >
+                💬 WhatsApp Phone Numbers
+              </button>
+              <button
+                type="button"
+                onClick={() => setAlertsTab('telegram')}
+                className={`ml-5 pb-2.5 border-b-2 transition ${
+                  alertsTab === 'telegram'
+                    ? 'border-sky-400 text-sky-400'
+                    : 'border-transparent text-stone-400 hover:text-stone-200'
+                }`}
+              >
+                🔔 Telegram Staff Bot
+              </button>
             </div>
+
+            {/* WhatsApp Tab: Dynamic Phone Numbers */}
+            {alertsTab === 'whatsapp' && (
+              <form onSubmit={handleSaveSettings} className="mt-4 space-y-4 text-xs">
+                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-emerald-200 space-y-1">
+                  <p className="font-bold">⚡ Dynamic Phone Numbers:</p>
+                  <p>
+                    Set your Kitchen & Manager phone numbers below. On every order, staff can tap{' '}
+                    <strong className="text-white">&ldquo;WhatsApp Kitchen&rdquo;</strong> to dispatch the complete order slip directly to this phone number!
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block font-semibold uppercase tracking-wider text-stone-400">
+                    Kitchen Dispatch WhatsApp Number *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 03001234567 or +923001234567"
+                    value={kitchenPhone}
+                    onChange={(e) => setKitchenPhone(e.target.value)}
+                    className="input mt-1.5 w-full text-sm font-mono text-white placeholder-stone-500"
+                  />
+                  <p className="mt-1 text-[11px] text-stone-500">
+                    The kitchen tablet or chef phone that receives incoming orders.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block font-semibold uppercase tracking-wider text-stone-400">
+                    Store Manager Phone Number (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 03217654321"
+                    value={managerPhone}
+                    onChange={(e) => setManagerPhone(e.target.value)}
+                    className="input mt-1.5 w-full text-sm font-mono text-white placeholder-stone-500"
+                  />
+                  <p className="mt-1 text-[11px] text-stone-500">
+                    Backup number for store manager or owner.
+                  </p>
+                </div>
+
+                {settingsStatus && (
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs">
+                    {settingsStatus}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                  <button
+                    type="submit"
+                    disabled={savingSettings}
+                    className="rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-500 disabled:opacity-50"
+                  >
+                    {savingSettings ? 'Saving...' : '💾 Save Phone Numbers'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsAlertsModalOpen(false)}
+                    className="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold text-stone-400 hover:text-white"
+                  >
+                    Close
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Telegram Tab: Free Unlimited Alerts */}
+            {alertsTab === 'telegram' && (
+              <div className="mt-4 space-y-4 text-xs text-stone-300">
+                <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 text-sky-200 space-y-1">
+                  <p className="font-bold">⚡ Automated Bot Alerts (Free & Unlimited):</p>
+                  <p>Sends an automated push notification to your phone or Telegram staff group whenever an order is submitted online.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="font-semibold text-white">Setup via /var/www/bigbites/.env:</p>
+                  <ol className="list-decimal pl-4 space-y-1.5 text-stone-400">
+                    <li>Message <strong className="text-white">@BotFather</strong> on Telegram to get your bot token.</li>
+                    <li>Message <strong className="text-white">@userinfobot</strong> to get your chat ID (or group ID).</li>
+                    <li>Add to <code className="text-accent">/var/www/bigbites/.env</code>:
+                      <pre className="mt-1 rounded-lg bg-black/50 p-2 font-mono text-[11px] text-amber-300">
+                        TELEGRAM_BOT_TOKEN=&ldquo;your_bot_token&rdquo;<br />
+                        TELEGRAM_CHAT_ID=&ldquo;your_chat_id&rdquo;
+                      </pre>
+                    </li>
+                    <li>Restart PM2: <code className="text-accent">pm2 restart bigbites-api</code></li>
+                  </ol>
+                </div>
+
+                {telegramStatus && (
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs">
+                    {telegramStatus}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                  <button
+                    type="button"
+                    disabled={testingTelegram}
+                    onClick={handleTestTelegram}
+                    className="rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-sky-500 disabled:opacity-50"
+                  >
+                    {testingTelegram ? 'Sending Test…' : '🔔 Send Test Alert to Phone'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsAlertsModalOpen(false)}
+                    className="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold text-stone-400 hover:text-white"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

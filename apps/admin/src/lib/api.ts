@@ -128,6 +128,12 @@ export const adminApi = {
     adminFetch(`/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
   testTelegram: () =>
     adminFetch<{ ok: boolean; message: string }>('/orders/test-telegram', { method: 'POST' }),
+  settings: () => adminFetch<Record<string, string>>('/settings'),
+  updateSettings: (data: Record<string, string>) =>
+    adminFetch<Record<string, string>>('/settings', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
   analytics: (days = 30) =>
     adminFetch<AnalyticsOverview>(`/analytics/overview?days=${days}`),
   uploadImage: async (file: File) => {

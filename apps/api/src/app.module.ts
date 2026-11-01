@@ -16,6 +16,7 @@ import { PromosModule } from './promos/promos.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { RolesModule } from './roles/roles.module';
+import { SettingsModule } from './settings/settings.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -35,6 +36,7 @@ import { HealthController } from './health.controller';
     AnalyticsModule,
     UploadsModule,
     RolesModule,
+    SettingsModule,
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
