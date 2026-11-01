@@ -60,6 +60,24 @@ export const adminApi = {
       permissions?: string[];
     }>('/auth/me'),
   roles: () => adminFetch<RolesResponse>('/roles'),
+  users: () => adminFetch<AdminUserMember[]>('/roles/users'),
+  createUser: (body: { name: string; email: string; password: string; roleId?: string }) =>
+    adminFetch<AdminUserMember>('/roles/users', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  updateUser: (
+    id: string,
+    body: { name?: string; email?: string; password?: string; roleId?: string },
+  ) =>
+    adminFetch<AdminUserMember>(`/roles/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+  deleteUser: (id: string) =>
+    adminFetch<{ ok: boolean; message: string }>(`/roles/users/${id}`, {
+      method: 'DELETE',
+    }),
   createRole: (body: { name: string; description?: string; permissions: string[] }) =>
     adminFetch<AdminRole>('/roles', { method: 'POST', body: JSON.stringify(body) }),
   updateRole: (
@@ -276,4 +294,13 @@ export type AvailablePermission = {
 export type RolesResponse = {
   roles: AdminRole[];
   availablePermissions: AvailablePermission[];
+};
+
+export type AdminUserMember = {
+  id: string;
+  name: string;
+  email: string;
+  roleId: string | null;
+  role?: { id: string; name: string; slug: string; isSystem: boolean } | null;
+  createdAt: string;
 };

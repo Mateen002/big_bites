@@ -5,6 +5,7 @@ import {
   NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 
 export const PERMISSIONS = [
@@ -19,6 +20,8 @@ export const PERMISSIONS = [
   { key: 'zones:write', label: 'Manage Delivery Zones & Fees', module: 'Logistics' },
   { key: 'promos:read', label: 'View Promo Codes', module: 'Marketing' },
   { key: 'promos:write', label: 'Manage Promo Codes & Discounts', module: 'Marketing' },
+  { key: 'users:read', label: 'View Team Members & Staff', module: 'Security' },
+  { key: 'users:write', label: 'Create & Manage Team Members', module: 'Security' },
   { key: 'roles:read', label: 'View Roles & Permissions', module: 'Security' },
   { key: 'roles:create', label: 'Create New Roles (Admin & Super Admin)', module: 'Security' },
   { key: 'roles:edit', label: 'Edit Roles (Super Admin Only)', module: 'Security' },
@@ -39,6 +42,8 @@ export const ADMIN_PERMISSIONS = [
   'zones:write',
   'promos:read',
   'promos:write',
+  'users:read',
+  'users:write',
   'roles:read',
   'roles:create',
 ];
@@ -235,6 +240,211 @@ export class RolesService implements OnModuleInit {
 
     await this.prisma.role.delete({ where: { id } });
     return { ok: true, message: `Role '${role.name}' deleted successfully` };
+  }
+
+  // --- Team / Admin User Management ---
+
+  async listUsers() {
+    return this.prisma.adminUser.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        roleId: true,
+        role: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            isSystem: true,
+          },
+        },
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async createUser(
+    currentUser: { userId: string; role?: string },
+    data: {
+      name: string;
+      email: string;
+      password: string;
+      roleId?: string;
+    },
+  ) {
+    const isSuperAdmin = currentUser.role === 'super_admin';
+    const isAdmin = currentUser.role === 'admin';
+
+    if (!isSuperAdmin && !isAdmin) {
+      throw new ForbiddenException('You do not have permission to create users');
+    }
+
+    const name = data.name?.trim();
+    if (!name) throw new BadRequestException('Full name is required');
+
+    const email = data.email?.trim().toLowerCase();
+    if (!email || !email.includes('@')) {
+      throw new BadRequestException('Valid email address is required');
+    }
+
+    const password = data.password?.trim();
+    if (!password || password.length < 6) {
+      throw new BadRequestException('Password must be at least 6 characters long');
+    }
+
+    const existing = await this.prisma.adminUser.findUnique({
+      where: { email },
+    });
+    if (existing) {
+      throw new BadRequestException('An admin user with this email already exists');
+    }
+
+    let roleId = data.roleId;
+    if (roleId) {
+      const targetRole = await this.prisma.role.findUnique({ where: { id: roleId } });
+      if (!targetRole) throw new NotFoundException('Selected role does not exist');
+      if (!isSuperAdmin && targetRole.slug === 'super_admin') {
+        throw new ForbiddenException('Only Super Admin can assign the Super Admin role');
+      }
+    } else {
+      const defaultRole = await this.prisma.role.findUnique({ where: { slug: 'admin' } });
+      if (defaultRole) roleId = defaultRole.id;
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    return this.prisma.adminUser.create({
+      data: {
+        name,
+        email,
+        passwordHash,
+        roleId,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        roleId: true,
+        role: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            isSystem: true,
+          },
+        },
+        createdAt: true,
+      },
+    });
+  }
+
+  async updateUser(
+    currentUser: { userId: string; role?: string },
+    id: string,
+    data: {
+      name?: string;
+      email?: string;
+      password?: string;
+      roleId?: string;
+    },
+  ) {
+    const isSuperAdmin = currentUser.role === 'super_admin';
+    const isAdmin = currentUser.role === 'admin';
+
+    if (!isSuperAdmin && !isAdmin) {
+      throw new ForbiddenException('You do not have permission to update users');
+    }
+
+    const targetUser = await this.prisma.adminUser.findUnique({
+      where: { id },
+      include: { role: true },
+    });
+    if (!targetUser) throw new NotFoundException('User not found');
+
+    if (!isSuperAdmin && targetUser.role?.slug === 'super_admin') {
+      throw new ForbiddenException('Only Super Admin can modify Super Admin accounts');
+    }
+
+    const updateData: {
+      name?: string;
+      email?: string;
+      passwordHash?: string;
+      roleId?: string;
+    } = {};
+
+    if (data.name && data.name.trim()) {
+      updateData.name = data.name.trim();
+    }
+    if (data.email && data.email.trim()) {
+      const email = data.email.trim().toLowerCase();
+      if (email !== targetUser.email) {
+        const existing = await this.prisma.adminUser.findUnique({ where: { email } });
+        if (existing) throw new BadRequestException('Email already in use');
+        updateData.email = email;
+      }
+    }
+    if (data.password && data.password.trim()) {
+      if (data.password.trim().length < 6) {
+        throw new BadRequestException('Password must be at least 6 characters long');
+      }
+      updateData.passwordHash = await bcrypt.hash(data.password.trim(), 10);
+    }
+    if (data.roleId) {
+      const targetRole = await this.prisma.role.findUnique({ where: { id: data.roleId } });
+      if (!targetRole) throw new NotFoundException('Selected role does not exist');
+      if (!isSuperAdmin && targetRole.slug === 'super_admin') {
+        throw new ForbiddenException('Only Super Admin can assign the Super Admin role');
+      }
+      updateData.roleId = data.roleId;
+    }
+
+    return this.prisma.adminUser.update({
+      where: { id },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        roleId: true,
+        role: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            isSystem: true,
+          },
+        },
+        createdAt: true,
+      },
+    });
+  }
+
+  async deleteUser(currentUser: { userId: string; role?: string }, id: string) {
+    const isSuperAdmin = currentUser.role === 'super_admin';
+    const isAdmin = currentUser.role === 'admin';
+
+    if (!isSuperAdmin && !isAdmin) {
+      throw new ForbiddenException('You do not have permission to delete users');
+    }
+
+    if (currentUser.userId === id) {
+      throw new BadRequestException('You cannot delete your own account');
+    }
+
+    const targetUser = await this.prisma.adminUser.findUnique({
+      where: { id },
+      include: { role: true },
+    });
+    if (!targetUser) throw new NotFoundException('User not found');
+
+    if (!isSuperAdmin && targetUser.role?.slug === 'super_admin') {
+      throw new ForbiddenException('Only Super Admin can delete Super Admin accounts');
+    }
+
+    await this.prisma.adminUser.delete({ where: { id } });
+    return { ok: true, message: `User ${targetUser.name} deleted successfully` };
   }
 }
 

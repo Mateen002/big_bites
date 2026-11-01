@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   adminApi,
@@ -185,14 +186,35 @@ export default function RolesPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={startCreate}
-          className="btn"
-          disabled={!isSuperAdmin && !isAdmin}
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/users"
+            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-stone-300 transition hover:bg-white/10 hover:text-white"
+          >
+            👥 Manage Team Members
+          </Link>
+          <button
+            type="button"
+            onClick={startCreate}
+            className="btn"
+            disabled={!isSuperAdmin && !isAdmin}
+          >
+            + Create New Role
+          </button>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-white/10 text-sm font-semibold">
+        <span className="border-b-2 border-accent pb-3 text-accent">
+          🛡 Roles & Permissions ({roles.length})
+        </span>
+        <Link
+          href="/users"
+          className="ml-6 border-b-2 border-transparent pb-3 text-stone-400 transition hover:text-stone-200"
         >
-          + Create New Role
-        </button>
+          👥 Team Members & Staff
+        </Link>
       </div>
 
       {/* Role permission info banner */}

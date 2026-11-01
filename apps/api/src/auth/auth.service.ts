@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 
-export type AuthRole = 'super_admin' | 'admin' | 'customer';
+export type AuthRole = 'super_admin' | 'admin' | 'customer' | (string & {});
 
 @Injectable()
 export class AuthService {

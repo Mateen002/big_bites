@@ -22,6 +22,37 @@ export class RolesController {
     return this.roles.list();
   }
 
+  // --- User / Staff Management Endpoints ---
+
+  @Get('users')
+  listUsers() {
+    return this.roles.listUsers();
+  }
+
+  @Post('users')
+  createUser(
+    @Req() req: any,
+    @Body() body: { name: string; email: string; password: string; roleId?: string },
+  ) {
+    return this.roles.createUser(req.user, body);
+  }
+
+  @Put('users/:id')
+  updateUser(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() body: { name?: string; email?: string; password?: string; roleId?: string },
+  ) {
+    return this.roles.updateUser(req.user, id, body);
+  }
+
+  @Delete('users/:id')
+  deleteUser(@Req() req: any, @Param('id') id: string) {
+    return this.roles.deleteUser(req.user, id);
+  }
+
+  // --- Role Specific Endpoints ---
+
   @Get(':id')
   byId(@Param('id') id: string) {
     return this.roles.byId(id);

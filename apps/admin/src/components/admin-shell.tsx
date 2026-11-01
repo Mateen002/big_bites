@@ -14,6 +14,7 @@ const links = [
   { href: '/zones', label: 'Zones', icon: '⌖' },
   { href: '/promos', label: 'Promos', icon: '%' },
   { href: '/roles', label: 'Roles & Permissions', icon: '🛡' },
+  { href: '/users', label: 'Team & Staff', icon: '👥' },
 ];
 
 export type AdminUserState = {

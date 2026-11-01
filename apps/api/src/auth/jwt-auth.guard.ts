@@ -14,7 +14,7 @@ export class AdminAuthGuard extends AuthGuard('jwt') {
   handleRequest<TUser = { role?: string }>(err: Error | null, user: TUser): TUser {
     if (err || !user) throw err || new UnauthorizedException();
     const role = (user as { role?: string }).role;
-    if (role !== 'admin' && role !== 'super_admin') {
+    if (!role || role === 'customer') {
       throw new UnauthorizedException('Admin access required');
     }
     return user;
