@@ -128,7 +128,14 @@ export default function CategoriesPage() {
                 <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-ink-700">
                   {c.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={assetUrl(c.image)} alt="" className="h-full w-full object-cover" />
+                    <img
+                      src={assetUrl(c.image)}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
                   ) : null}
                 </div>
                 <div>

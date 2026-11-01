@@ -22,6 +22,16 @@ async function bootstrap() {
   // Served outside /api/v1 so URLs are /uploads/...
   app.useStaticAssets(uploadsPath, { prefix: '/uploads/' });
 
+  const publicImagesPath = join(process.cwd(), 'public/images');
+  if (existsSync(publicImagesPath)) {
+    app.useStaticAssets(publicImagesPath, { prefix: '/images/' });
+  } else {
+    const fallbackImagesPath = join(process.cwd(), '../web/public/images');
+    if (existsSync(fallbackImagesPath)) {
+      app.useStaticAssets(fallbackImagesPath, { prefix: '/images/' });
+    }
+  }
+
   app.enableCors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
