@@ -17,3 +17,4 @@ export class SettingsController {
     return this.settings.setMany(body);
   }
 }
+

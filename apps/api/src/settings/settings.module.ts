@@ -8,3 +8,4 @@ import { SettingsController } from './settings.controller';
   exports: [SettingsService],
 })
 export class SettingsModule {}
+

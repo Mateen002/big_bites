@@ -13,6 +13,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CartService } from '../cart/cart.service';
 import { PaymentsService } from '../payments/payments.service';
+import { SettingsService } from '../settings/settings.service';
 
 @Injectable()
 export class OrdersService {
@@ -20,6 +21,7 @@ export class OrdersService {
     private prisma: PrismaService,
     private cart: CartService,
     private payments: PaymentsService,
+    private settings: SettingsService,
   ) {}
 
   private cache = new Map<string, { data: unknown; expiresAt: number }>();
@@ -229,9 +231,13 @@ export class OrdersService {
     this.trackingCache.set(order.id, { data: order, expiresAt: Date.now() + 30_000 });
     this.trackingCache.set(order.orderNumber, { data: order, expiresAt: Date.now() + 30_000 });
 
-    // Tier 2: Fire-and-forget instant mobile dispatch alert
+    // Tier 2: Fire-and-forget instant mobile dispatch alerts (Telegram & WhatsApp)
     this.sendTelegramAlert(order).catch((err) => {
       console.warn('Telegram notification error:', err);
+    });
+
+    this.sendWhatsAppAlert(order).catch((err) => {
+      console.warn('WhatsApp automated alert error:', err);
     });
 
     return { ...order, payment };
@@ -405,6 +411,177 @@ export class OrdersService {
       });
     } catch (err) {
       console.warn('Telegram notification dispatch failed:', err);
+    }
+  }
+
+  // --- Tier 2: WhatsApp Automated Delivery (Supports Multiple Phone Numbers) ---
+
+  private cleanPhone(phone?: string | null): string {
+    if (!phone) return '';
+    const digits = phone.replace(/\D/g, '');
+    if (digits.startsWith('92')) return digits;
+    if (digits.startsWith('0')) return `92${digits.slice(1)}`;
+    if (digits.length === 10) return `92${digits}`;
+    return digits;
+  }
+
+  private parseMultiplePhones(input?: string | null): string[] {
+    if (!input) return [];
+    try {
+      const trimmed = input.trim();
+      if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .map((item) => (typeof item === 'string' ? item : item?.phone))
+            .map((p) => this.cleanPhone(p))
+            .filter((p) => p.length >= 10);
+        }
+      }
+    } catch {}
+    return input
+      .split(/[,;\n\/]+/)
+      .map((s) => this.cleanPhone(s.trim()))
+      .filter((s) => s.length >= 10);
+  }
+
+  private async getAllTargetPhones(): Promise<string[]> {
+    const contactsJson = await this.settings.get('staff_contacts_json', '');
+    const rawKitchen = await this.settings.get('kitchen_phone', process.env.KITCHEN_WHATSAPP_NUMBERS || '');
+    const rawManager = await this.settings.get('manager_phone', '');
+
+    const phoneSet = new Set<string>();
+    for (const p of this.parseMultiplePhones(contactsJson)) phoneSet.add(p);
+    for (const p of this.parseMultiplePhones(rawKitchen)) phoneSet.add(p);
+    for (const p of this.parseMultiplePhones(rawManager)) phoneSet.add(p);
+
+    return Array.from(phoneSet);
+  }
+
+  async sendTestWhatsAppAlert() {
+    const phones = await this.getAllTargetPhones();
+    if (!phones.length) {
+      throw new BadRequestException('No WhatsApp phone numbers are configured in settings');
+    }
+
+    const ultraInstance = await this.settings.get('whatsapp_instance_id', process.env.WHATSAPP_INSTANCE_ID || '');
+    const ultraToken = await this.settings.get('whatsapp_token', process.env.WHATSAPP_TOKEN || '');
+    const metaToken = await this.settings.get('whatsapp_cloud_token', process.env.WHATSAPP_CLOUD_TOKEN || '');
+    const metaPhoneId = await this.settings.get('whatsapp_phone_number_id', process.env.WHATSAPP_PHONE_NUMBER_ID || '');
+
+    const hasGateway = (ultraInstance && ultraToken) || (metaToken && metaPhoneId);
+
+    if (!hasGateway) {
+      return {
+        ok: false,
+        requiresGateway: true,
+        phones,
+        message: `Saved ${phones.length} active phone number(s): ${phones.map((p) => `+${p}`).join(', ')}. To receive 100% automated background WhatsApp notifications when customers place an order, connect an UltraMsg or Meta API gateway below, or tap the green WhatsApp buttons on order cards!`,
+      };
+    }
+
+    const testMsg = `✅ *BigBites Lahore: Automated WhatsApp Alert Test!*\nYour phone number is active. You will receive live customer order dispatch notifications here.`;
+    const results: { phone: string; ok: boolean; error?: string }[] = [];
+
+    for (const phone of phones) {
+      try {
+        if (ultraInstance && ultraToken) {
+          const res = await fetch(`https://api.ultramsg.com/${ultraInstance}/messages/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              token: ultraToken,
+              to: phone,
+              body: testMsg,
+            }),
+          });
+          results.push({ phone, ok: res.ok });
+        } else if (metaToken && metaPhoneId) {
+          const res = await fetch(`https://graph.facebook.com/v21.0/${metaPhoneId}/messages`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${metaToken}`,
+            },
+            body: JSON.stringify({
+              messaging_product: 'whatsapp',
+              to: phone,
+              type: 'text',
+              text: { body: testMsg },
+            }),
+          });
+          results.push({ phone, ok: res.ok });
+        }
+      } catch (err: any) {
+        results.push({ phone, ok: false, error: err.message });
+      }
+    }
+
+    return {
+      ok: true,
+      message: `Test alert dispatched to ${phones.length} number(s)`,
+      results,
+    };
+  }
+
+  private async sendWhatsAppAlert(order: any) {
+    const phones = await this.getAllTargetPhones();
+    if (!phones.length) return;
+
+    const ultraInstance = await this.settings.get('whatsapp_instance_id', process.env.WHATSAPP_INSTANCE_ID || '');
+    const ultraToken = await this.settings.get('whatsapp_token', process.env.WHATSAPP_TOKEN || '');
+    const metaToken = await this.settings.get('whatsapp_cloud_token', process.env.WHATSAPP_CLOUD_TOKEN || '');
+    const metaPhoneId = await this.settings.get('whatsapp_phone_number_id', process.env.WHATSAPP_PHONE_NUMBER_ID || '');
+
+    if (!((ultraInstance && ultraToken) || (metaToken && metaPhoneId))) return;
+
+    const itemsList =
+      order.items
+        ?.map((i: any) => `• *${i.quantity}×* ${i.productName}`)
+        .join('\n') || '—';
+
+    const messageText = `🔔 *BIGBITES KITCHEN ORDER #${order.orderNumber}*
+━━━━━━━━━━━━━━━━━━
+👤 *Customer:* ${order.customerName}
+📞 *Phone:* ${order.customerPhone}
+📍 *Zone:* ${order.deliveryZone?.name ?? 'Standard'}
+${order.addressLine ? `🏠 *Address:* ${order.addressLine}\n` : ''}💰 *Total:* Rs ${Number(order.totalPkr).toLocaleString()} (${order.paymentMethod})
+
+📋 *Items:*
+${itemsList}
+${order.notes ? `\n📝 *Notes:* "${order.notes}"\n` : ''}━━━━━━━━━━━━━━━━━━
+🕒 ${new Date(order.createdAt).toLocaleString('en-PK', { timeZone: 'Asia/Karachi' })}`;
+
+    for (const phone of phones) {
+      try {
+        if (ultraInstance && ultraToken) {
+          await fetch(`https://api.ultramsg.com/${ultraInstance}/messages/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              token: ultraToken,
+              to: phone,
+              body: messageText,
+            }),
+          });
+        } else if (metaToken && metaPhoneId) {
+          await fetch(`https://graph.facebook.com/v21.0/${metaPhoneId}/messages`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${metaToken}`,
+            },
+            body: JSON.stringify({
+              messaging_product: 'whatsapp',
+              to: phone,
+              type: 'text',
+              text: { body: messageText },
+            }),
+          });
+        }
+      } catch (err) {
+        console.warn(`Automated WhatsApp dispatch failed for ${phone}:`, err);
+      }
     }
   }
 }

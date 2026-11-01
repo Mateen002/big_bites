@@ -128,6 +128,11 @@ export const adminApi = {
     adminFetch(`/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
   testTelegram: () =>
     adminFetch<{ ok: boolean; message: string }>('/orders/test-telegram', { method: 'POST' }),
+  testWhatsApp: () =>
+    adminFetch<{ ok: boolean; message: string; requiresGateway?: boolean; results?: any[] }>(
+      '/orders/test-whatsapp',
+      { method: 'POST' },
+    ),
   settings: () => adminFetch<Record<string, string>>('/settings'),
   updateSettings: (data: Record<string, string>) =>
     adminFetch<Record<string, string>>('/settings', {

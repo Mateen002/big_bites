@@ -131,6 +131,12 @@ export class OrdersController {
   }
 
   @UseGuards(AdminAuthGuard)
+  @Post('test-whatsapp')
+  testWhatsApp() {
+    return this.orders.sendTestWhatsAppAlert();
+  }
+
+  @UseGuards(AdminAuthGuard)
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body() dto: StatusDto) {
     return this.orders.updateStatus(id, dto.status);

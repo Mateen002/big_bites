@@ -24,15 +24,35 @@ const STATUS_COLOR: Record<string, string> = {
   CANCELLED: 'bg-rose-500/20 text-rose-300 ring-1 ring-rose-500/30',
 };
 
-// Web Audio API Synthesizer: 3-tone pleasant & loud kitchen bell (A5 -> E6 -> C6)
+export interface StaffContact {
+  id: string;
+  label: string;
+  phone: string;
+}
+
+// Global shared AudioContext so modern browsers never block or suspend background playback
+let sharedAudioCtx: AudioContext | null = null;
+
+function getAudioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  const AudioCtx =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  if (!AudioCtx) return null;
+  if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+    sharedAudioCtx = new AudioCtx();
+  }
+  if (sharedAudioCtx.state === 'suspended') {
+    sharedAudioCtx.resume().catch(() => {});
+  }
+  return sharedAudioCtx;
+}
+
+// Web Audio API Synthesizer: 3-tone pleasant & loud kitchen buzzer (A5 -> E6 -> C6)
 function playKitchenBuzzer() {
   try {
-    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    if (ctx.state === 'suspended') {
-      ctx.resume();
-    }
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const now = ctx.currentTime;
 
     // Tone 1: High crisp bell (880 Hz / A5)
@@ -40,42 +60,61 @@ function playKitchenBuzzer() {
     const gain1 = ctx.createGain();
     osc1.type = 'sine';
     osc1.frequency.setValueAtTime(880, now);
-    gain1.gain.setValueAtTime(0.7, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+    gain1.gain.setValueAtTime(0.85, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
     osc1.connect(gain1);
     gain1.connect(ctx.destination);
     osc1.start(now);
-    osc1.stop(now + 0.5);
+    osc1.stop(now + 0.42);
 
-    // Tone 2: Harmonic brightness (1318.5 Hz / E6)
+    // Tone 2: Bright harmonic (1318.5 Hz / E6)
     const osc2 = ctx.createOscillator();
     const gain2 = ctx.createGain();
     osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(1318.51, now + 0.16);
-    gain2.gain.setValueAtTime(0.8, now + 0.16);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+    osc2.frequency.setValueAtTime(1318.51, now + 0.15);
+    gain2.gain.setValueAtTime(0.9, now + 0.15);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
     osc2.connect(gain2);
     gain2.connect(ctx.destination);
-    osc2.start(now + 0.16);
-    osc2.stop(now + 0.75);
+    osc2.start(now + 0.15);
+    osc2.stop(now + 0.68);
 
     // Tone 3: Resolving warm chime (1046.5 Hz / C6)
     const osc3 = ctx.createOscillator();
     const gain3 = ctx.createGain();
     osc3.type = 'triangle';
-    osc3.frequency.setValueAtTime(1046.5, now + 0.32);
-    gain3.gain.setValueAtTime(0.9, now + 0.32);
-    gain3.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
+    osc3.frequency.setValueAtTime(1046.5, now + 0.3);
+    gain3.gain.setValueAtTime(1.0, now + 0.3);
+    gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
     osc3.connect(gain3);
     gain3.connect(ctx.destination);
-    osc3.start(now + 0.32);
-    osc3.stop(now + 1.15);
+    osc3.start(now + 0.3);
+    osc3.stop(now + 1.0);
   } catch (err) {
-    console.warn('Kitchen chime playback could not be started:', err);
+    console.warn('Kitchen buzzer playback failed:', err);
   }
 }
 
-// Format Pakistani phone numbers to clean international format for WhatsApp wa.me links
+// Gentle tactile confirmation chime when staff accepts an order (never triggers alarm)
+function playAcceptChime() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1046.5, now);
+    gain.gain.setValueAtTime(0.35, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.22);
+  } catch {}
+}
+
+// Clean and format Pakistani numbers to international 923...
 function cleanPhoneForWhatsApp(phone?: string | null): string {
   if (!phone) return '';
   const digits = phone.replace(/\D/g, '');
@@ -118,14 +157,18 @@ export default function OrdersPage() {
   const [q, setQ] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  // Audio & Notification state
+  // Audio & Continuous Buzzer State
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [isAlarmMuted, setIsAlarmMuted] = useState(false);
   const [autoSync, setAutoSync] = useState(true);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
 
-  // Dynamic Settings (Kitchen & Manager Phone Numbers)
-  const [kitchenPhone, setKitchenPhone] = useState('');
-  const [managerPhone, setManagerPhone] = useState('');
+  // Dynamic Staff WhatsApp Contacts (Multiple Numbers) & Gateway Credentials
+  const [staffContacts, setStaffContacts] = useState<StaffContact[]>([
+    { id: '1', label: 'Kitchen / Chef', phone: '03200095612' },
+  ]);
+  const [ultraInstanceInput, setUltraInstanceInput] = useState('');
+  const [ultraTokenInput, setUltraTokenInput] = useState('');
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsStatus, setSettingsStatus] = useState('');
 
@@ -137,24 +180,49 @@ export default function OrdersPage() {
   const [alertsTab, setAlertsTab] = useState<'whatsapp' | 'telegram'>('whatsapp');
   const [telegramStatus, setTelegramStatus] = useState<string>('');
   const [testingTelegram, setTestingTelegram] = useState(false);
+  const [testingWhatsApp, setTestingWhatsApp] = useState(false);
+  const [whatsAppTestStatus, setWhatsAppTestStatus] = useState<string>('');
 
-  // Keep track of known order IDs to detect newly arrived orders
+  // Keep track of known order IDs to detect genuinely new arrivals
   const knownOrderIdsRef = useRef<Set<string>>(new Set(cachedOrders.map((o) => o.id)));
-  const soundEnabledRef = useRef(soundEnabled);
-  soundEnabledRef.current = soundEnabled;
+  const prevUnackOrderIdsRef = useRef<Set<string>>(new Set());
 
-  // Initialize sound preference from localStorage & load dynamic settings
+  // Initialize sound preference & dynamic settings from backend
   useEffect(() => {
     const saved = localStorage.getItem('bigbites_kitchen_sound');
     if (saved === 'true') {
       setSoundEnabled(true);
+      getAudioContext();
     }
 
-    // Load dynamic phone settings from API
-    adminApi.settings()
+    // Load settings from API
+    adminApi
+      .settings()
       .then((s) => {
-        setKitchenPhone(s.kitchen_phone || '');
-        setManagerPhone(s.manager_phone || '');
+        if (s.staff_contacts_json) {
+          try {
+            const parsed = JSON.parse(s.staff_contacts_json);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setStaffContacts(parsed);
+            }
+          } catch {}
+        } else if (s.kitchen_phone) {
+          const phones = s.kitchen_phone
+            .split(/[,;\n/]+/)
+            .map((p) => p.trim())
+            .filter(Boolean);
+          if (phones.length > 0) {
+            setStaffContacts(
+              phones.map((p, idx) => ({
+                id: String(idx + 1),
+                label: idx === 0 ? 'Kitchen' : idx === 1 ? 'Manager' : `Staff #${idx + 1}`,
+                phone: p,
+              })),
+            );
+          }
+        }
+        setUltraInstanceInput(s.whatsapp_instance_id || '');
+        setUltraTokenInput(s.whatsapp_token || '');
       })
       .catch(() => {});
   }, []);
@@ -164,6 +232,10 @@ export default function OrdersPage() {
     setSoundEnabled(next);
     localStorage.setItem('bigbites_kitchen_sound', String(next));
     if (next) {
+      const ctx = getAudioContext();
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume();
+      }
       playKitchenBuzzer();
       if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission();
@@ -177,20 +249,15 @@ export default function OrdersPage() {
       const fresh = await adminApi.orders();
       setLastSyncTime(new Date());
 
+      // If new orders arrived, trigger desktop notification (audio is controlled by unacknowledged loop)
       if (knownOrderIdsRef.current.size > 0) {
         const newOrders = fresh.filter((o) => !knownOrderIdsRef.current.has(o.id));
-        if (newOrders.length > 0) {
-          if (soundEnabledRef.current) {
-            playKitchenBuzzer();
-          }
-
-          if ('Notification' in window && Notification.permission === 'granted') {
-            const first = newOrders[0];
-            new Notification(`🚨 BigBites: New Order ${first.orderNumber}`, {
-              body: `${first.customerName} · Rs ${first.totalPkr.toLocaleString()} · ${first.deliveryZone?.name ?? 'Lahore'}`,
-              icon: '/logo.png',
-            });
-          }
+        if (newOrders.length > 0 && 'Notification' in window && Notification.permission === 'granted') {
+          const first = newOrders[0];
+          new Notification(`🚨 BigBites: New Order ${first.orderNumber}`, {
+            body: `${first.customerName} · Rs ${first.totalPkr.toLocaleString()} · ${first.deliveryZone?.name ?? 'Lahore'}`,
+            icon: '/logo.png',
+          });
         }
       }
 
@@ -208,28 +275,52 @@ export default function OrdersPage() {
     load();
   }, []);
 
-  // Background Auto-Sync every 6 seconds
+  // Background Auto-Sync every 5 seconds
   useEffect(() => {
     if (!autoSync) return;
     const interval = setInterval(() => {
       load(true);
-    }, 6000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [autoSync]);
 
-  // Unacknowledged orders (PENDING or CONFIRMED orders waiting for kitchen to start preparing)
+  // Unacknowledged orders (orders waiting for kitchen to accept: PENDING or CONFIRMED)
   const unacknowledgedOrders = useMemo(() => {
     return items.filter((o) => o.status === 'CONFIRMED' || o.status === 'PENDING');
   }, [items]);
 
-  // Repeating buzzer interval: if there are unacknowledged orders, chime every 18 seconds
+  const hasUnacknowledged = unacknowledgedOrders.length > 0;
+
+  // Un-mute automatically whenever a genuinely BRAND-NEW order arrives
   useEffect(() => {
-    if (!soundEnabled || unacknowledgedOrders.length === 0) return;
+    const hasBrandNew = unacknowledgedOrders.some((o) => !prevUnackOrderIdsRef.current.has(o.id));
+    if (hasBrandNew && unacknowledgedOrders.length > 0) {
+      setIsAlarmMuted(false);
+    }
+    prevUnackOrderIdsRef.current = new Set(unacknowledgedOrders.map((o) => o.id));
+  }, [unacknowledgedOrders]);
+
+  // Continuous Repeating Kitchen Buzzer:
+  // Rings every 4.5 seconds until accepted or muted. Stops immediately upon accept!
+  useEffect(() => {
+    if (!soundEnabled || isAlarmMuted || !hasUnacknowledged) {
+      return;
+    }
+
+    // Immediately play first alert
+    playKitchenBuzzer();
+
+    // Repeat every 4.5 seconds
     const buzzerInterval = setInterval(() => {
       playKitchenBuzzer();
-    }, 18000);
+    }, 4500);
+
     return () => clearInterval(buzzerInterval);
-  }, [soundEnabled, unacknowledgedOrders.length]);
+  }, [soundEnabled, isAlarmMuted, hasUnacknowledged]);
+
+  const validStaffContacts = useMemo(() => {
+    return staffContacts.filter((c) => cleanPhoneForWhatsApp(c.phone).length >= 10);
+  }, [staffContacts]);
 
   const filtered = useMemo(() => {
     return items.filter((o) => {
@@ -259,13 +350,15 @@ export default function OrdersPage() {
     }
   }
 
+  // Accept Order: Gives instant soft chime confirmation and transitions to PREPARING
   async function acknowledgeOrder(order: AdminOrder) {
+    playAcceptChime();
     await updateStatus(order.id, 'PREPARING');
   }
 
   async function advanceWorkflow(order: AdminOrder) {
     if (order.status === 'PENDING' || order.status === 'CONFIRMED') {
-      await updateStatus(order.id, 'PREPARING');
+      await acknowledgeOrder(order);
     } else if (order.status === 'PREPARING') {
       await updateStatus(order.id, 'OUT_FOR_DELIVERY');
     } else if (order.status === 'OUT_FOR_DELIVERY') {
@@ -280,44 +373,63 @@ export default function OrdersPage() {
     }, 150);
   }
 
-  // Save Dynamic Notification Phone Numbers
+  // Save Dynamic Notification Phone Numbers & Gateway credentials
   async function handleSaveSettings(e: FormEvent) {
     e.preventDefault();
     setSavingSettings(true);
     setSettingsStatus('');
     try {
+      const valid = staffContacts.filter((c) => cleanPhoneForWhatsApp(c.phone).length >= 7);
+      if (valid.length === 0) {
+        setSettingsStatus('⚠️ Please enter at least one valid phone number');
+        setSavingSettings(false);
+        return;
+      }
+
+      const allPhoneStrings = valid.map((c) => cleanPhoneForWhatsApp(c.phone)).join(', ');
+
       const updated = await adminApi.updateSettings({
-        kitchen_phone: kitchenPhone.trim(),
-        manager_phone: managerPhone.trim(),
+        staff_contacts_json: JSON.stringify(valid),
+        kitchen_phone: allPhoneStrings,
+        whatsapp_instance_id: ultraInstanceInput.trim(),
+        whatsapp_token: ultraTokenInput.trim(),
       });
-      setKitchenPhone(updated.kitchen_phone || '');
-      setManagerPhone(updated.manager_phone || '');
-      setSettingsStatus('✅ Notification phone numbers saved successfully!');
-    } catch (err) {
-      setSettingsStatus(`❌ ${err instanceof Error ? err.message : 'Save failed'}`);
+
+      if (updated.staff_contacts_json) {
+        try {
+          setStaffContacts(JSON.parse(updated.staff_contacts_json));
+        } catch {}
+      }
+      setUltraInstanceInput(updated.whatsapp_instance_id || '');
+      setUltraTokenInput(updated.whatsapp_token || '');
+      setSettingsStatus(`✅ Successfully saved ${valid.length} WhatsApp contact(s)!`);
+      setTimeout(() => setSettingsStatus(''), 4000);
+    } catch (err: unknown) {
+      setSettingsStatus(`❌ Failed to save: ${err instanceof Error ? err.message : 'Error'}`);
     } finally {
       setSavingSettings(false);
     }
   }
 
-  // Dispatch Order to Kitchen WhatsApp
-  function dispatchToKitchenWhatsApp(order: AdminOrder) {
-    const targetPhone = cleanPhoneForWhatsApp(kitchenPhone);
-    if (!targetPhone) {
+  // Dispatch Order Slip to a specific staff WhatsApp number
+  function dispatchToWhatsApp(order: AdminOrder, phone: string) {
+    const cleaned = cleanPhoneForWhatsApp(phone);
+    if (!cleaned) {
       setIsAlertsModalOpen(true);
-      setAlertsTab('whatsapp');
-      setSettingsStatus('⚠️ Please configure your Kitchen Phone Number below first!');
       return;
     }
-    const text = encodeURIComponent(generateWhatsAppOrderSlip(order));
-    window.open(`https://wa.me/${targetPhone}?text=${text}`, '_blank');
+    const msg = generateWhatsAppOrderSlip(order);
+    const url = `https://wa.me/${cleaned}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
   }
 
-  // Dispatch Customer WhatsApp Update
+  // Dispatch Customer Confirmation
   function dispatchToCustomerWhatsApp(order: AdminOrder) {
-    const targetPhone = cleanPhoneForWhatsApp(order.customerPhone);
-    const text = encodeURIComponent(generateWhatsAppCustomerMsg(order));
-    window.open(`https://wa.me/${targetPhone}?text=${text}`, '_blank');
+    const cleaned = cleanPhoneForWhatsApp(order.customerPhone);
+    if (!cleaned) return;
+    const msg = generateWhatsAppCustomerMsg(order);
+    const url = `https://wa.me/${cleaned}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
   }
 
   async function handleTestTelegram() {
@@ -326,10 +438,27 @@ export default function OrdersPage() {
     try {
       const res = await adminApi.testTelegram();
       setTelegramStatus(`✅ ${res.message}`);
-    } catch (err) {
+    } catch (err: unknown) {
       setTelegramStatus(`❌ ${err instanceof Error ? err.message : 'Failed to test Telegram'}`);
     } finally {
       setTestingTelegram(false);
+    }
+  }
+
+  async function handleTestWhatsApp() {
+    setTestingWhatsApp(true);
+    setWhatsAppTestStatus('');
+    try {
+      const res = await adminApi.testWhatsApp();
+      if (res.requiresGateway) {
+        setWhatsAppTestStatus(`ℹ️ ${res.message}`);
+      } else {
+        setWhatsAppTestStatus(`✅ ${res.message}`);
+      }
+    } catch (err: unknown) {
+      setWhatsAppTestStatus(`❌ ${err instanceof Error ? err.message : 'WhatsApp test failed'}`);
+    } finally {
+      setTestingWhatsApp(false);
     }
   }
 
@@ -346,7 +475,7 @@ export default function OrdersPage() {
           </div>
           <h1 className="mt-1 font-display text-3xl font-bold text-white">Orders & Dispatch</h1>
           <p className="mt-1 text-xs text-stone-400">
-            {items.length} total orders · Auto-synced every 6s{' '}
+            {items.length} total orders · Auto-synced every 5s{' '}
             {lastSyncTime && `(Last updated: ${lastSyncTime.toLocaleTimeString()})`}
           </p>
         </div>
@@ -364,27 +493,23 @@ export default function OrdersPage() {
             }`}
           >
             <span>{soundEnabled ? '🔔' : '🔕'}</span>
-            <span>{soundEnabled ? 'Audio Chime: ON (Testing)' : 'Audio Chime: OFF'}</span>
+            <span>{soundEnabled ? 'Kitchen Buzzer: ACTIVE' : 'Kitchen Buzzer: OFF'}</span>
           </button>
 
-          {/* Dynamic Phone Alerts Settings Button */}
+          {/* Multiple Phone Numbers Modal Button */}
           <button
             type="button"
             onClick={() => {
               setIsAlertsModalOpen(true);
               setSettingsStatus('');
               setTelegramStatus('');
+              setWhatsAppTestStatus('');
             }}
             className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2.5 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
-            title="Configure dynamic phone numbers for WhatsApp & Telegram alerts"
+            title="Configure multiple phone numbers for WhatsApp & Telegram alerts"
           >
             <span>📱</span>
-            <span>Phone & WhatsApp Alerts</span>
-            {kitchenPhone && (
-              <span className="rounded bg-emerald-500/20 px-1.5 py-0.2 text-[10px] text-emerald-300">
-                Active
-              </span>
-            )}
+            <span>WhatsApp Numbers ({validStaffContacts.length})</span>
           </button>
 
           {/* Manual Refresh Button */}
@@ -407,34 +532,55 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Unacknowledged Order Alert Banner */}
-      {unacknowledgedOrders.length > 0 && (
-        <div className="rounded-2xl border-2 border-amber-500/50 bg-amber-500/10 p-4 shadow-xl shadow-amber-500/10">
+      {/* Repeating Unacknowledged Order Alert Banner */}
+      {hasUnacknowledged && (
+        <div className="rounded-2xl border-2 border-amber-500 bg-amber-500/15 p-4 shadow-2xl shadow-amber-500/20 animate-pulse">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-xl font-bold text-ink-950 animate-bounce">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-2xl font-black text-ink-950 shadow-md">
                 🔔
               </span>
               <div>
-                <p className="text-base font-bold text-amber-200">
-                  {unacknowledgedOrders.length} New Order
-                  {unacknowledgedOrders.length > 1 ? 's' : ''} Awaiting Kitchen Acceptance!
-                </p>
-                <p className="text-xs text-amber-300/80">
-                  Orders: {unacknowledgedOrders.map((o) => `${o.orderNumber} (${o.customerName})`).join(', ')}
+                <div className="flex items-center gap-2">
+                  <p className="text-base font-extrabold text-amber-200 uppercase tracking-wide">
+                    🚨 {unacknowledgedOrders.length} New Order
+                    {unacknowledgedOrders.length > 1 ? 's' : ''} Awaiting Acceptance!
+                  </p>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase text-white ${
+                      isAlarmMuted ? 'bg-stone-600' : 'bg-rose-500 animate-bounce'
+                    }`}
+                  >
+                    {isAlarmMuted ? 'Buzzer Silenced' : 'Alarm Beeping'}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs text-amber-300/90 font-medium">
+                  Orders:{' '}
+                  {unacknowledgedOrders
+                    .map((o) => `${o.orderNumber} (${o.customerName} · Rs ${o.totalPkr.toLocaleString()})`)
+                    .join(', ')}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsAlarmMuted((m) => !m)}
+                className="rounded-xl border border-white/20 bg-white/10 px-3.5 py-2 text-xs font-bold text-stone-200 transition hover:bg-white/20"
+              >
+                {isAlarmMuted ? '🔔 Unmute Buzzer' : '🔕 Silence Buzzer'}
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
+                  playAcceptChime();
                   unacknowledgedOrders.forEach((o) => acknowledgeOrder(o));
                 }}
-                className="rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-ink-950 transition hover:bg-amber-400"
+                className="rounded-xl bg-amber-500 px-5 py-2 text-xs font-black uppercase tracking-wider text-ink-950 shadow-lg shadow-amber-500/30 transition hover:bg-amber-400"
               >
-                ✓ Accept All & Start Preparing
+                ✓ Accept All & Stop Alarm
               </button>
             </div>
           </div>
@@ -477,7 +623,7 @@ export default function OrdersPage() {
               key={o.id}
               className={`card transition border ${
                 isAwaiting
-                  ? 'border-amber-500/50 bg-amber-500/[0.04] ring-1 ring-amber-500/30 shadow-lg shadow-amber-500/5'
+                  ? 'border-amber-500/60 bg-amber-500/[0.05] ring-2 ring-amber-500/40 shadow-xl shadow-amber-500/10'
                   : 'border-white/10 hover:border-white/20'
               }`}
             >
@@ -507,12 +653,13 @@ export default function OrdersPage() {
                     <p className="font-semibold text-white">
                       {o.customerName}
                       <span className="text-stone-400 font-normal"> · {o.customerPhone}</span>
-                      <span className="text-accent font-normal"> · {o.deliveryZone?.name ?? 'Standard Zone'}</span>
+                      <span className="text-accent font-normal">
+                        {' '}
+                        · {o.deliveryZone?.name ?? 'Standard Zone'}
+                      </span>
                     </p>
                     {o.addressLine && (
-                      <p className="text-xs text-stone-400 mt-0.5">
-                        📍 {o.addressLine}
-                      </p>
+                      <p className="text-xs text-stone-400 mt-0.5">📍 {o.addressLine}</p>
                     )}
                   </div>
 
@@ -521,7 +668,8 @@ export default function OrdersPage() {
                     {o.items.map((i, idx) => (
                       <div key={idx} className="flex items-center justify-between gap-2 text-stone-300">
                         <span>
-                          <strong className="text-white font-mono">{i.quantity}×</strong> {i.productName}
+                          <strong className="text-white font-mono">{i.quantity}×</strong>{' '}
+                          {i.productName}
                           {i.notes && <em className="text-stone-400 ml-1">({i.notes})</em>}
                         </span>
                         <span className="text-stone-500 text-[11px] uppercase tracking-wider">
@@ -587,24 +735,28 @@ export default function OrdersPage() {
                     </button>
                   )}
 
-                  <div className="flex flex-wrap items-center justify-end gap-2">
-                    {/* One-Tap WhatsApp to Kitchen Phone */}
-                    <button
-                      type="button"
-                      onClick={() => dispatchToKitchenWhatsApp(o)}
-                      className="flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/20"
-                      title={kitchenPhone ? `Send order slip to kitchen (${kitchenPhone})` : 'Configure kitchen phone number'}
-                    >
-                      <span>💬</span>
-                      <span>WhatsApp Kitchen</span>
-                    </button>
+                  {/* WhatsApp Staff & Customer Dispatch Controls */}
+                  <div className="flex flex-wrap items-center justify-end gap-1.5">
+                    {/* Render button for each configured staff contact */}
+                    {validStaffContacts.map((contact) => (
+                      <button
+                        key={contact.id}
+                        type="button"
+                        onClick={() => dispatchToWhatsApp(o, contact.phone)}
+                        className="flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20 active:scale-95"
+                        title={`Send complete order ticket to ${contact.label} (+${cleanPhoneForWhatsApp(contact.phone)})`}
+                      >
+                        <span>💬</span>
+                        <span>{contact.label}</span>
+                      </button>
+                    ))}
 
-                    {/* One-Tap WhatsApp to Customer Phone */}
+                    {/* Customer WhatsApp Notification */}
                     <button
                       type="button"
                       onClick={() => dispatchToCustomerWhatsApp(o)}
-                      className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-stone-300 transition hover:bg-white/10 hover:text-white"
-                      title={`Message customer at ${o.customerPhone}`}
+                      className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-stone-300 transition hover:bg-white/10 hover:text-white"
+                      title={`Send order update to customer (${o.customerPhone})`}
                     >
                       <span>💬</span>
                       <span>Customer</span>
@@ -614,15 +766,15 @@ export default function OrdersPage() {
                     <button
                       type="button"
                       onClick={() => handlePrint(o)}
-                      className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-stone-300 transition hover:bg-white/10 hover:text-white"
-                      title="Print 80mm Kitchen Order Ticket"
+                      className="rounded-xl border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-stone-300 transition hover:bg-white/10 hover:text-white"
+                      title="Print 80mm Kitchen Order Ticket (KOT)"
                     >
-                      🖨 Print KOT Slip
+                      🖨 KOT Slip
                     </button>
 
                     {/* Full Status Dropdown */}
                     <select
-                      className="input w-auto min-w-[140px] py-1.5 text-xs"
+                      className="input w-auto min-w-[130px] py-1.5 text-xs"
                       value={o.status}
                       disabled={busyId === o.id}
                       onChange={(e) => updateStatus(o.id, e.target.value)}
@@ -640,14 +792,14 @@ export default function OrdersPage() {
           );
         })}
 
-        {!filtered.length && (
-          <div className="card text-center py-12 text-stone-400">
-            No orders match the current filter.
+        {filtered.length === 0 && (
+          <div className="card py-12 text-center text-stone-500">
+            No orders found matching the filter.
           </div>
         )}
       </div>
 
-      {/* Hidden Print Slip View (Rendered only on print dialog) */}
+      {/* Hidden Print Slip View (Rendered only on print dialog for 80mm/58mm thermal printers) */}
       {printOrder && (
         <div id="print-kot-slip" className="hidden print:block fixed inset-0 bg-white text-black p-4 font-mono text-xs">
           <div className="max-w-[80mm] mx-auto space-y-2 border-b border-black pb-2 text-center">
@@ -696,14 +848,14 @@ export default function OrdersPage() {
       {/* Dynamic Phone Numbers & Mobile Alerts Setup Modal */}
       {isAlertsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl border border-white/15 bg-ink-900 p-6 shadow-2xl">
+          <div className="w-full max-w-xl rounded-2xl border border-white/15 bg-ink-900 p-6 shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div className="flex items-center gap-2.5">
                 <span className="text-2xl">📱</span>
                 <div>
                   <h3 className="text-lg font-bold text-white">Mobile Order Notifications</h3>
-                  <p className="text-xs text-stone-400">Configure phone numbers for WhatsApp & Telegram alerts.</p>
+                  <p className="text-xs text-stone-400">Configure multiple phone numbers for WhatsApp & Telegram alerts.</p>
                 </div>
               </div>
               <button
@@ -726,7 +878,7 @@ export default function OrdersPage() {
                     : 'border-transparent text-stone-400 hover:text-stone-200'
                 }`}
               >
-                💬 WhatsApp Phone Numbers
+                💬 Multiple WhatsApp Numbers ({validStaffContacts.length})
               </button>
               <button
                 type="button"
@@ -737,52 +889,147 @@ export default function OrdersPage() {
                     : 'border-transparent text-stone-400 hover:text-stone-200'
                 }`}
               >
-                🔔 Telegram Staff Bot
+                🔔 Free Telegram Bot (Automated)
               </button>
             </div>
 
-            {/* WhatsApp Tab: Dynamic Phone Numbers */}
+            {/* WhatsApp Tab: Multiple Dynamic Contacts & Optional Automated Gateway */}
             {alertsTab === 'whatsapp' && (
               <form onSubmit={handleSaveSettings} className="mt-4 space-y-4 text-xs">
                 <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-emerald-200 space-y-1">
-                  <p className="font-bold">⚡ Dynamic Phone Numbers:</p>
+                  <p className="font-bold">⚡ Dynamic Multi-Number WhatsApp Dispatch:</p>
                   <p>
-                    Set your Kitchen & Manager phone numbers below. On every order, staff can tap{' '}
-                    <strong className="text-white">&ldquo;WhatsApp Kitchen&rdquo;</strong> to dispatch the complete order slip directly to this phone number!
+                    Add your kitchen tablets, store managers, and chefs below. Each contact gets an instant 1-tap dispatch button on every incoming order!
                   </p>
                 </div>
 
-                <div>
-                  <label className="block font-semibold uppercase tracking-wider text-stone-400">
-                    Kitchen Dispatch WhatsApp Number *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. 03001234567 or +923001234567"
-                    value={kitchenPhone}
-                    onChange={(e) => setKitchenPhone(e.target.value)}
-                    className="input mt-1.5 w-full text-sm font-mono text-white placeholder-stone-500"
-                  />
-                  <p className="mt-1 text-[11px] text-stone-500">
-                    The kitchen tablet or chef phone that receives incoming orders.
-                  </p>
+                {/* Multiple Phone Numbers List */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block font-semibold uppercase tracking-wider text-stone-300">
+                      Staff WhatsApp Numbers ({staffContacts.length})
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStaffContacts((prev) => [
+                          ...prev,
+                          {
+                            id: Date.now().toString(),
+                            label: prev.length === 1 ? 'Manager' : `Staff #${prev.length + 1}`,
+                            phone: '',
+                          },
+                        ]);
+                      }}
+                      className="flex items-center gap-1 text-[11px] font-bold text-accent hover:underline"
+                    >
+                      <span>+</span> Add Another Phone Number
+                    </button>
+                  </div>
+
+                  <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                    {staffContacts.map((contact) => (
+                      <div
+                        key={contact.id}
+                        className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-2.5"
+                      >
+                        <div className="w-1/3">
+                          <label className="block text-[10px] text-stone-400 uppercase font-semibold">
+                            Role / Label
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Kitchen"
+                            value={contact.label}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setStaffContacts((prev) =>
+                                prev.map((c) => (c.id === contact.id ? { ...c, label: val } : c)),
+                              );
+                            }}
+                            className="input mt-1 w-full text-xs font-semibold"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label className="block text-[10px] text-stone-400 uppercase font-semibold">
+                            WhatsApp Phone (Pakistani)
+                          </label>
+                          <input
+                            type="tel"
+                            placeholder="03200095612"
+                            value={contact.phone}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setStaffContacts((prev) =>
+                                prev.map((c) => (c.id === contact.id ? { ...c, phone: val } : c)),
+                              );
+                            }}
+                            className="input mt-1 w-full text-xs font-mono"
+                          />
+                        </div>
+                        {staffContacts.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setStaffContacts((prev) => prev.filter((c) => c.id !== contact.id));
+                            }}
+                            className="mt-4 rounded-lg p-2 text-stone-400 hover:bg-rose-500/20 hover:text-rose-300 transition"
+                            title="Remove contact"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Active badges preview */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-[11px] text-stone-400">Active Contacts:</span>
+                    {validStaffContacts.map((c) => (
+                      <span
+                        key={c.id}
+                        className="rounded-md border border-emerald-500/30 bg-emerald-500/20 px-2 py-0.5 font-mono text-[11px] text-emerald-300"
+                      >
+                        {c.label}: +{cleanPhoneForWhatsApp(c.phone)}
+                      </span>
+                    ))}
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block font-semibold uppercase tracking-wider text-stone-400">
-                    Store Manager Phone Number (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 03217654321"
-                    value={managerPhone}
-                    onChange={(e) => setManagerPhone(e.target.value)}
-                    className="input mt-1.5 w-full text-sm font-mono text-white placeholder-stone-500"
-                  />
-                  <p className="mt-1 text-[11px] text-stone-500">
-                    Backup number for store manager or owner.
+                {/* Optional WhatsApp Automated Gateway */}
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="font-bold text-white">Automated Background WhatsApp (UltraMsg Gateway)</p>
+                    <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300 uppercase">
+                      Optional
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-stone-400 leading-relaxed">
+                    WhatsApp is end-to-end encrypted. To send WhatsApp alerts <strong>automatically in the background</strong> without tapping buttons, link an UltraMsg instance by entering your credentials below:
                   </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] uppercase text-stone-400">Instance ID</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. instance12345"
+                        value={ultraInstanceInput}
+                        onChange={(e) => setUltraInstanceInput(e.target.value)}
+                        className="input mt-1 w-full text-xs font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase text-stone-400">Token</label>
+                      <input
+                        type="password"
+                        placeholder="e.g. abc123xyz"
+                        value={ultraTokenInput}
+                        onChange={(e) => setUltraTokenInput(e.target.value)}
+                        className="input mt-1 w-full text-xs font-mono"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {settingsStatus && (
@@ -790,15 +1037,31 @@ export default function OrdersPage() {
                     {settingsStatus}
                   </div>
                 )}
+                {whatsAppTestStatus && (
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-200">
+                    {whatsAppTestStatus}
+                  </div>
+                )}
 
-                <div className="flex items-center justify-between pt-3 border-t border-white/10">
-                  <button
-                    type="submit"
-                    disabled={savingSettings}
-                    className="rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-500 disabled:opacity-50"
-                  >
-                    {savingSettings ? 'Saving...' : '💾 Save Phone Numbers'}
-                  </button>
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-white/10">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="submit"
+                      disabled={savingSettings}
+                      className="rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-500 disabled:opacity-50"
+                    >
+                      {savingSettings ? 'Saving...' : '💾 Save All Phone Numbers'}
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={testingWhatsApp}
+                      onClick={handleTestWhatsApp}
+                      className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2 text-xs font-bold text-emerald-300 hover:bg-emerald-500/20 disabled:opacity-50"
+                    >
+                      {testingWhatsApp ? 'Testing...' : '🔔 Test Alert'}
+                    </button>
+                  </div>
 
                   <button
                     type="button"
@@ -815,8 +1078,8 @@ export default function OrdersPage() {
             {alertsTab === 'telegram' && (
               <div className="mt-4 space-y-4 text-xs text-stone-300">
                 <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 text-sky-200 space-y-1">
-                  <p className="font-bold">⚡ Automated Bot Alerts (Free & Unlimited):</p>
-                  <p>Sends an automated push notification to your phone or Telegram staff group whenever an order is submitted online.</p>
+                  <p className="font-bold">⚡ 100% Free & Unlimited Background Alerts:</p>
+                  <p>Sends an automated push notification to your phone or Telegram staff group the exact millisecond an order is placed.</p>
                 </div>
 
                 <div className="space-y-2">
