@@ -16,7 +16,18 @@ function dayKey(d: Date) {
 export class AnalyticsService {
   constructor(private prisma: PrismaService) {}
 
+  private cache = new Map<number, { data: any; expiresAt: number }>();
+  private readonly TTL_MS = 60_000;
+
+  clearCache() {
+    this.cache.clear();
+  }
+
   async overview(days = 30) {
+    const hit = this.cache.get(days);
+    if (hit && hit.expiresAt > Date.now()) {
+      return hit.data;
+    }
     const to = new Date();
     const from = new Date();
     from.setHours(0, 0, 0, 0);
@@ -25,7 +36,7 @@ export class AnalyticsService {
     const prevFrom = new Date(from);
     prevFrom.setDate(prevFrom.getDate() - days);
 
-    const [orders, prevOrders, catalog, customers, zones] = await Promise.all([
+    const [orders, prevOrders, catalog, customers, zones, categoryCount] = await Promise.all([
       this.prisma.order.findMany({
         where: { createdAt: { gte: from, lte: to } },
         include: {
@@ -49,6 +60,7 @@ export class AnalyticsService {
       }),
       this.prisma.customer.count(),
       this.prisma.deliveryZone.count({ where: { isActive: true } }),
+      this.prisma.category.count({ where: { isActive: true } }),
     ]);
 
     const costByProduct = new Map(
@@ -181,12 +193,9 @@ export class AnalyticsService {
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 8);
 
-    const [productCount, categoryCount] = await Promise.all([
-      this.prisma.product.count({ where: { isActive: true } }),
-      this.prisma.category.count({ where: { isActive: true } }),
-    ]);
+    const productCount = catalog.filter((p) => p.isActive).length;
 
-    return {
+    const result = {
       range: { from: from.toISOString(), to: to.toISOString(), days },
       catalog: {
         products: productCount,
@@ -238,5 +247,8 @@ export class AnalyticsService {
         itemCount: o.items.reduce((s, i) => s + i.quantity, 0),
       })),
     };
+
+    this.cache.set(days, { data: result, expiresAt: Date.now() + this.TTL_MS });
+    return result;
   }
 }

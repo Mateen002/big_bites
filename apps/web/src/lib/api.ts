@@ -126,9 +126,9 @@ async function fetchWithRetry(url: string, init: RequestInit, retries = 2, delay
     } catch (err) {
       lastError = err;
       // On connection errors (common on Windows with IPv6/IPv4 localhost binding differences), swap host:
-      if (targetUrl.includes('localhost') && attempt === 0) {
+      if (targetUrl.includes('localhost')) {
         targetUrl = targetUrl.replace('localhost', '127.0.0.1');
-      } else if (targetUrl.includes('127.0.0.1') && attempt === 0) {
+      } else if (targetUrl.includes('127.0.0.1')) {
         targetUrl = targetUrl.replace('127.0.0.1', 'localhost');
       }
       if (attempt < retries) {
@@ -136,18 +136,19 @@ async function fetchWithRetry(url: string, init: RequestInit, retries = 2, delay
       }
     }
   }
-  throw lastError instanceof Error
-    ? lastError
-    : new Error('BigBites backend API could not be reached. Please verify the API server is running on port 4000.');
+  const detail = lastError instanceof Error ? lastError.message : String(lastError);
+  throw new Error(
+    `BigBites backend API could not be reached at ${url} (${detail}). Please verify the API server is running on port 4000.`,
+  );
 }
 
-interface BrowserCacheEntry {
+interface CacheEntry {
   data: unknown;
   expiresAt: number;
 }
-const browserCache = new Map<string, BrowserCacheEntry>();
-const inflightBrowserRequests = new Map<string, Promise<unknown>>();
-const BROWSER_CACHE_TTL_MS = 90_000; // 90 seconds browser memory cache
+const memoryCache = new Map<string, CacheEntry>();
+const inflightRequests = new Map<string, Promise<unknown>>();
+const CACHE_TTL_MS = 60_000; // 60 seconds memory cache (server + browser)
 
 function isCacheablePath(
   path: string,
@@ -172,13 +173,13 @@ async function request<T>(
 ): Promise<T> {
   const isCacheable = isCacheablePath(path, options);
 
-  if (typeof window !== 'undefined' && isCacheable) {
-    const cached = browserCache.get(path);
+  if (isCacheable) {
+    const cached = memoryCache.get(path);
     if (cached && cached.expiresAt > Date.now()) {
       return cached.data as T;
     }
-    if (inflightBrowserRequests.has(path)) {
-      return inflightBrowserRequests.get(path) as Promise<T>;
+    if (inflightRequests.has(path)) {
+      return inflightRequests.get(path) as Promise<T>;
     }
   }
 
@@ -244,20 +245,20 @@ async function request<T>(
       setCartSession((data as { sessionId: string }).sessionId);
     }
 
-    if (typeof window !== 'undefined' && isCacheable) {
-      browserCache.set(path, {
+    if (isCacheable) {
+      memoryCache.set(path, {
         data,
-        expiresAt: Date.now() + BROWSER_CACHE_TTL_MS,
+        expiresAt: Date.now() + CACHE_TTL_MS,
       });
     }
 
     return data;
   })();
 
-  if (typeof window !== 'undefined' && isCacheable) {
-    inflightBrowserRequests.set(path, fetchPromise);
+  if (isCacheable) {
+    inflightRequests.set(path, fetchPromise);
     fetchPromise.finally(() => {
-      inflightBrowserRequests.delete(path);
+      inflightRequests.delete(path);
     });
   }
 

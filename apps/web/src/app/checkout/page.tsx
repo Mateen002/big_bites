@@ -133,6 +133,7 @@ export default function CheckoutPage() {
             : address.trim(),
         deliveryZoneId: activeZone?.id || zoneId,
         paymentMethod,
+        orderType,
         promoCode: promoCode.trim() || undefined,
         notes: (fd.get('notes') as string)?.trim() || undefined,
         scheduledFor,
@@ -337,32 +338,45 @@ export default function CheckoutPage() {
           )}
 
           <div className="space-y-4 rounded-2xl border border-amber-400/20 bg-[#24073B] p-5 shadow-xl">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-amber-400">3. Payment Method</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-amber-400">3. Payment Method</h2>
+              <span className="text-xs font-medium text-amber-400/90">💵 Cash on Delivery Active</span>
+            </div>
             <div className="grid gap-2.5 sm:grid-cols-2">
               {[
-                ['COD', 'Cash on Delivery', 'Pay cash when rider arrives'],
-                ['JAZZCASH', 'JazzCash', 'Mobile account or card sandbox'],
-                ['EASYPAISA', 'Easypaisa', 'Wallet account sandbox'],
-                ['STRIPE', 'Credit / Debit Card', 'Visa, Mastercard'],
-              ].map(([value, label, desc]) => (
+                { value: 'COD', label: 'Cash on Delivery', desc: 'Pay cash when rider arrives at your doorstep', enabled: true },
+                { value: 'JAZZCASH', label: 'JazzCash', desc: 'Mobile account or digital wallet', enabled: false },
+                { value: 'EASYPAISA', label: 'Easypaisa', desc: 'Direct wallet transfer', enabled: false },
+                { value: 'STRIPE', label: 'Credit / Debit Card', desc: 'Visa & Mastercard', enabled: false },
+              ].map(({ value, label, desc, enabled }) => (
                 <label
                   key={value}
-                  className={`flex cursor-pointer flex-col rounded-xl border p-3.5 transition ${
-                    paymentMethod === value
-                      ? 'border-amber-400 bg-amber-400/15 ring-1 ring-amber-400 shadow-md shadow-amber-400/10'
-                      : 'border-purple-800/40 bg-[#1C0430] hover:border-amber-400/30'
+                  className={`flex flex-col rounded-xl border p-3.5 transition ${
+                    !enabled
+                      ? 'opacity-40 cursor-not-allowed border-purple-900/40 bg-[#160326]'
+                      : paymentMethod === value
+                      ? 'border-amber-400 bg-amber-400/15 ring-1 ring-amber-400 shadow-md shadow-amber-400/10 cursor-pointer'
+                      : 'border-purple-800/40 bg-[#1C0430] hover:border-amber-400/30 cursor-pointer'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="pay"
-                      value={value}
-                      checked={paymentMethod === value}
-                      onChange={() => setPaymentMethod(value)}
-                      className="accent-amber-400"
-                    />
-                    <span className="font-semibold text-white text-sm">{label}</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="pay"
+                        value={value}
+                        disabled={!enabled}
+                        checked={paymentMethod === value}
+                        onChange={() => enabled && setPaymentMethod(value)}
+                        className="accent-amber-400"
+                      />
+                      <span className="font-semibold text-white text-sm">{label}</span>
+                    </div>
+                    {!enabled && (
+                      <span className="rounded-full bg-purple-900/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-400/80 border border-amber-400/20">
+                        Coming Soon
+                      </span>
+                    )}
                   </div>
                   <span className="mt-1 pl-5 text-xs text-purple-200/70">{desc}</span>
                 </label>

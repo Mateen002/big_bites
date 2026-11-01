@@ -14,6 +14,7 @@ import { OrderStatus, PaymentMethod } from '@prisma/client';
 import {
   IsEmail,
   IsEnum,
+  IsIn,
   IsOptional,
   IsString,
   MinLength,
@@ -22,6 +23,7 @@ import { OrdersService } from './orders.service';
 import {
   AdminAuthGuard,
   CustomerAuthGuard,
+  OptionalAuthGuard,
   OptionalCustomerAuthGuard,
 } from '../auth/jwt-auth.guard';
 
@@ -47,6 +49,10 @@ class CheckoutDto {
 
   @IsEnum(PaymentMethod)
   paymentMethod!: PaymentMethod;
+
+  @IsOptional()
+  @IsIn(['DELIVERY', 'PICKUP'])
+  orderType?: 'DELIVERY' | 'PICKUP';
 
   @IsOptional()
   @IsString()
@@ -109,9 +115,13 @@ export class OrdersController {
     return this.orders.get(id);
   }
 
+  @UseGuards(OptionalAuthGuard)
   @Get(':id/tracking')
-  tracking(@Param('id') id: string) {
-    return this.orders.tracking(id);
+  tracking(
+    @Param('id') id: string,
+    @Req() req: { user?: { userId: string; role: string } | null },
+  ) {
+    return this.orders.tracking(id, req?.user);
   }
 
   @UseGuards(AdminAuthGuard)

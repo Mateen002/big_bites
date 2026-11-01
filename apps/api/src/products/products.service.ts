@@ -26,8 +26,8 @@ export class ProductsService {
     const searchFilter = opts.search?.trim()
       ? {
           OR: [
-            { name: { contains: opts.search.trim() } },
-            { description: { contains: opts.search.trim() } },
+            { name: { contains: opts.search.trim(), mode: 'insensitive' as const } },
+            { description: { contains: opts.search.trim(), mode: 'insensitive' as const } },
           ],
         }
       : {};

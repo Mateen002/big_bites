@@ -43,7 +43,8 @@ export default function OrdersPage() {
     return items.filter((o) => {
       if (filter !== 'ALL' && o.status !== filter) return false;
       if (!q.trim()) return true;
-      const hay = `${o.orderNumber} ${o.customerName} ${o.customerPhone} ${o.deliveryZone.name}`.toLowerCase();
+      const zone = o.deliveryZone?.name || '';
+      const hay = `${o.orderNumber} ${o.customerName} ${o.customerPhone} ${zone}`.toLowerCase();
       return hay.includes(q.trim().toLowerCase());
     });
   }, [items, filter, q]);
@@ -111,7 +112,7 @@ export default function OrdersPage() {
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-stone-300">
-                  {o.customerName} · {o.customerPhone} · {o.deliveryZone.name}
+                  {o.customerName} · {o.customerPhone} · {o.deliveryZone?.name ?? 'Standard'}
                 </p>
                 <p className="mt-2 text-xs leading-relaxed text-stone-500">
                   {o.items.map((i) => `${i.quantity}× ${i.productName}`).join(' · ')}

@@ -46,3 +46,19 @@ export class OptionalCustomerAuthGuard extends AuthGuard('jwt') implements CanAc
     return user;
   }
 }
+
+/** Attaches any authenticated user (admin or customer) if token present; never blocks the request. */
+@Injectable()
+export class OptionalAuthGuard extends AuthGuard('jwt') implements CanActivate {
+  canActivate(context: ExecutionContext) {
+    const req = context.switchToHttp().getRequest<{ headers: { authorization?: string } }>();
+    if (!req.headers.authorization) return true;
+    return super.canActivate(context) as boolean | Promise<boolean>;
+  }
+
+  handleRequest<TUser = { role?: string } | null>(err: Error | null, user: TUser): TUser | null {
+    if (err || !user) return null;
+    return user;
+  }
+}
+

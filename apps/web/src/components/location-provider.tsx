@@ -88,24 +88,34 @@ export function LocationProvider({ children }: { children: ReactNode }) {
 
   // Load zones and restore persisted selection
   useEffect(() => {
-    api.zones().then((allZones) => {
-      setZones(allZones);
+    let active = true;
+    api
+      .zones()
+      .then((allZones) => {
+        if (!active || !Array.isArray(allZones)) return;
+        setZones(allZones);
 
-      if (typeof window !== 'undefined') {
-        const savedZoneId = localStorage.getItem(STORAGE_KEY_ZONE);
-        const savedType = localStorage.getItem(STORAGE_KEY_TYPE) as OrderType | null;
-        const confirmed = localStorage.getItem(STORAGE_KEY_CONFIRMED);
+        if (typeof window !== 'undefined') {
+          const savedZoneId = localStorage.getItem(STORAGE_KEY_ZONE);
+          const savedType = localStorage.getItem(STORAGE_KEY_TYPE) as OrderType | null;
 
-        if (savedType) setOrderType(savedType);
+          if (savedType) setOrderType(savedType);
 
-        const found = allZones.find((z) => z.id === savedZoneId);
-        if (found) {
-          setSelectedZone(found);
-        } else if (allZones[0]) {
-          setSelectedZone(allZones[0]);
+          const found = allZones.find((z) => z.id === savedZoneId);
+          if (found) {
+            setSelectedZone(found);
+          } else if (allZones[0]) {
+            setSelectedZone(allZones[0]);
+          }
         }
-      }
-    });
+      })
+      .catch((err) => {
+        console.warn('Could not load delivery zones from backend:', err);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const openModal = useCallback(() => setIsModalOpen(true), []);

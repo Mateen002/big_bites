@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { AppModule } from './app.module';
@@ -10,6 +11,11 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.setGlobalPrefix('api/v1');
   app.use(cookieParser());
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
 
   const uploadsPath = join(process.cwd(), 'uploads');
   if (!existsSync(uploadsPath)) mkdirSync(uploadsPath, { recursive: true });
@@ -26,7 +32,7 @@ async function bootstrap() {
       if (allowed.includes(origin)) {
         return callback(null, true);
       }
-      return callback(null, true);
+      return callback(null, false);
     },
     credentials: true,
     exposedHeaders: ['X-Cart-Session', 'x-cart-session'],

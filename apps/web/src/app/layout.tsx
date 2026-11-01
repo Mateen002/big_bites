@@ -88,6 +88,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <Link href="/my-orders" className="text-purple-200/80 hover:text-amber-300">
                     Track Orders
                   </Link>
+                  <Link href="/privacy" className="text-purple-200/60 hover:text-amber-300 text-xs">
+                    Privacy Policy
+                  </Link>
+                  <Link href="/terms" className="text-purple-200/60 hover:text-amber-300 text-xs">
+                    Terms of Service
+                  </Link>
+                  <Link href="/refunds" className="text-purple-200/60 hover:text-amber-300 text-xs">
+                    Refund Policy
+                  </Link>
                 </div>
               </div>
               <div>

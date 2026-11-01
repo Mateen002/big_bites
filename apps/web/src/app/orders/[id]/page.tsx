@@ -279,7 +279,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
         {/* Support & Action Buttons */}
         <div className="mt-6 flex flex-wrap gap-3">
           <a
-            href={`https://wa.me/923001234567?text=${whatsappMessage}`}
+            href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_SUPPORT || '923001234567'}?text=${whatsappMessage}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-500 shadow-lg shadow-emerald-950/40"

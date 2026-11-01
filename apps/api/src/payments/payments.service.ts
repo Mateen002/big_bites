@@ -19,33 +19,19 @@ export class PaymentsService {
   }
 
   initiate(input: PaymentInitiateInput) {
+    if (input.method !== PaymentMethod.COD) {
+      throw new BadRequestException(
+        'Online payments are temporarily disabled. Please choose Cash on Delivery (COD).',
+      );
+    }
     const adapter = this.adapters.get(input.method);
     if (!adapter) throw new BadRequestException('Unsupported payment method');
     return adapter.initiate(input);
   }
 
   async completeSandbox(reference: string) {
-    const order = await this.prisma.order.findFirst({
-      where: { paymentRef: reference },
-    });
-    if (!order) throw new BadRequestException('Unknown payment reference');
-
-    const adapter = this.adapters.get(order.paymentMethod);
-    if (!adapter) throw new BadRequestException('Unsupported payment method');
-    const result = await adapter.verify(reference);
-
-    await this.prisma.order.update({
-      where: { id: order.id },
-      data: {
-        paymentStatus: PaymentStatus.PAID,
-        status: order.status === 'PENDING' ? 'CONFIRMED' : order.status,
-      },
-    });
-
-    return {
-      ...result,
-      orderId: order.id,
-      orderNumber: order.orderNumber,
-    };
+    throw new BadRequestException(
+      'Online payment gateway simulation is disabled. BigBites currently accepts Cash on Delivery (COD).',
+    );
   }
 }

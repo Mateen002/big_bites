@@ -16,5 +16,11 @@
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "dynamicPriority",
+    "excludeDirectories": ["**/node_modules", "dist"]
+  }
 }
