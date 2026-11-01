@@ -111,6 +111,7 @@ export function ProductOptionsForm({ product }: { product: Product }) {
       }
       const payload = {
         productId: product.id,
+        productSlug: product.slug,
         quantity: qty,
         notes: notes || undefined,
         selections: formattedSelections,

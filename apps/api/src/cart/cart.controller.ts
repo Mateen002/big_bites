@@ -41,6 +41,10 @@ class AddItemDto {
   productId!: string;
 
   @IsOptional()
+  @IsString()
+  productSlug?: string;
+
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(99)

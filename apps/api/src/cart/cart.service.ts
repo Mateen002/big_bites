@@ -85,6 +85,7 @@ export class CartService {
     sessionId: string,
     input: {
       productId: string;
+      productSlug?: string;
       quantity?: number;
       selections?: {
         optionGroupId: string;
@@ -94,8 +95,8 @@ export class CartService {
       notes?: string;
     },
   ) {
-    const cacheKey = input.productId;
-    const hit = this.productCache.get(cacheKey);
+    const cacheKey = input.productSlug || input.productId;
+    const hit = this.productCache.get(cacheKey) || this.productCache.get(input.productId);
     let product: any;
     let categoryGroups: any[];
 
@@ -110,6 +111,19 @@ export class CartService {
           optionGroups: { include: { optionGroup: { include: { values: true } } } },
         },
       });
+
+      // Fallback: look up by slug if id was stale or regenerated after a re-seed
+      if (!product && (input.productSlug || input.productId)) {
+        const slugQuery = input.productSlug || input.productId;
+        product = await this.prisma.product.findFirst({
+          where: { slug: slugQuery },
+          include: {
+            category: true,
+            optionGroups: { include: { optionGroup: { include: { values: true } } } },
+          },
+        });
+      }
+
       if (!product || !product.isActive) throw new NotFoundException('Product not found');
 
       categoryGroups = await this.prisma.categoryOptionGroup.findMany({
@@ -117,11 +131,16 @@ export class CartService {
         include: { optionGroup: { include: { values: true } } },
       });
 
-      this.productCache.set(cacheKey, {
+      const entry = {
         product,
         categoryGroups,
         expiresAt: Date.now() + 120_000,
-      });
+      };
+      this.productCache.set(product.id, entry);
+      this.productCache.set(product.slug, entry);
+      if (input.productId !== product.id) {
+        this.productCache.set(input.productId, entry);
+      }
     }
 
     const groups = new Map(
