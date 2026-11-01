@@ -237,3 +237,4 @@ export class RolesService implements OnModuleInit {
     return { ok: true, message: `Role '${role.name}' deleted successfully` };
   }
 }
+

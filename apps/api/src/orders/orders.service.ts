@@ -23,10 +23,14 @@ export class OrdersService {
   ) {}
 
   private cache = new Map<string, { data: unknown; expiresAt: number }>();
+  private zoneCache = new Map<string, { data: any; expiresAt: number }>();
+  private trackingCache = new Map<string, { data: any; expiresAt: number }>();
+  private promoCache = new Map<string, { data: any; expiresAt: number }>();
   private readonly TTL_MS = 10_000;
 
   clearCache() {
     this.cache.clear();
+    this.trackingCache.clear();
   }
 
   private orderNumber() {
@@ -91,21 +95,40 @@ export class OrdersService {
     const cart = await this.cart.getCart(sessionId);
     if (!cart.items.length) throw new BadRequestException('Cart is empty');
 
-    const zone = await this.prisma.deliveryZone.findFirst({
-      where: { id: input.deliveryZoneId, isActive: true },
-    });
+    let zone: any;
+    const cachedZone = this.zoneCache.get(input.deliveryZoneId);
+    if (cachedZone && cachedZone.expiresAt > Date.now()) {
+      zone = cachedZone.data;
+    } else {
+      zone = await this.prisma.deliveryZone.findFirst({
+        where: { id: input.deliveryZoneId, isActive: true },
+      });
+      if (zone) {
+        this.zoneCache.set(input.deliveryZoneId, { data: zone, expiresAt: Date.now() + 120_000 });
+      }
+    }
     if (!zone) throw new BadRequestException('Invalid delivery zone');
 
     let discountPkr = 0;
     let promoId: string | undefined;
     if (input.promoCode) {
-      const promo = await this.prisma.promo.findFirst({
-        where: { code: input.promoCode.toUpperCase(), isActive: true },
-      });
+      const promoKey = input.promoCode.toUpperCase();
+      let promo: any;
+      const cachedPromo = this.promoCache.get(promoKey);
+      if (cachedPromo && cachedPromo.expiresAt > Date.now()) {
+        promo = cachedPromo.data;
+      } else {
+        promo = await this.prisma.promo.findFirst({
+          where: { code: promoKey, isActive: true },
+        });
+        if (promo) {
+          this.promoCache.set(promoKey, { data: promo, expiresAt: Date.now() + 60_000 });
+        }
+      }
       if (!promo) throw new BadRequestException('Invalid promo code');
       const now = new Date();
-      if (promo.startsAt && promo.startsAt > now) throw new BadRequestException('Promo not active yet');
-      if (promo.endsAt && promo.endsAt < now) throw new BadRequestException('Promo expired');
+      if (promo.startsAt && new Date(promo.startsAt) > now) throw new BadRequestException('Promo not active yet');
+      if (promo.endsAt && new Date(promo.endsAt) < now) throw new BadRequestException('Promo expired');
       if (cart.subtotalPkr < promo.minOrderPkr) {
         throw new BadRequestException(`Minimum order Rs ${promo.minOrderPkr} for this promo`);
       }
@@ -203,20 +226,30 @@ export class OrdersService {
 
     await this.cart.clear(sessionId);
     this.clearCache();
+    this.trackingCache.set(order.id, { data: order, expiresAt: Date.now() + 30_000 });
+    this.trackingCache.set(order.orderNumber, { data: order, expiresAt: Date.now() + 30_000 });
     return { ...order, payment };
   }
 
   async tracking(idOrNumber: string, user?: { userId: string; role: string } | null) {
-    const order = await this.prisma.order.findFirst({
-      where: {
-        OR: [{ id: idOrNumber }, { orderNumber: idOrNumber }],
-      },
-      include: {
-        items: true,
-        deliveryZone: true,
-      },
-    });
-    if (!order) throw new NotFoundException('Order not found');
+    let order: any;
+    const hit = this.trackingCache.get(idOrNumber);
+    if (hit && hit.expiresAt > Date.now()) {
+      order = hit.data;
+    } else {
+      order = await this.prisma.order.findFirst({
+        where: {
+          OR: [{ id: idOrNumber }, { orderNumber: idOrNumber }],
+        },
+        include: {
+          items: true,
+          deliveryZone: true,
+        },
+      });
+      if (!order) throw new NotFoundException('Order not found');
+      this.trackingCache.set(order.id, { data: order, expiresAt: Date.now() + 15_000 });
+      this.trackingCache.set(order.orderNumber, { data: order, expiresAt: Date.now() + 15_000 });
+    }
 
     const isAuthorized =
       user &&

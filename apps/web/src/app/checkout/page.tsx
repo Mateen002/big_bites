@@ -150,7 +150,7 @@ export default function CheckoutPage() {
         } catch {}
       }
 
-      await refresh();
+      refresh().catch(() => {});
 
       // Avoid popup blocker: direct navigation if payment gateway redirect is present
       if (order.payment?.redirectUrl && paymentMethod !== 'COD') {

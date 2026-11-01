@@ -49,3 +49,4 @@ export class RolesController {
     return this.roles.delete(req.user, id);
   }
 }
+
