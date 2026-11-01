@@ -4,15 +4,20 @@ import { FormEvent, useEffect, useState } from 'react';
 import { ImageField } from '@/components/image-field';
 import { adminApi, assetUrl, type AdminCategory, type AdminProduct } from '@/lib/api';
 
+let cachedProducts: AdminProduct[] = [];
+let cachedCategories: AdminCategory[] = [];
+
 export default function ProductsPage() {
-  const [items, setItems] = useState<AdminProduct[]>([]);
-  const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [items, setItems] = useState<AdminProduct[]>(() => cachedProducts);
+  const [categories, setCategories] = useState<AdminCategory[]>(() => cachedCategories);
   const [editing, setEditing] = useState<AdminProduct | null>(null);
   const [image, setImage] = useState('');
   const [error, setError] = useState('');
 
   async function load() {
     const [p, c] = await Promise.all([adminApi.products(), adminApi.categories()]);
+    cachedProducts = p;
+    cachedCategories = c;
     setItems(p);
     setCategories(c);
   }

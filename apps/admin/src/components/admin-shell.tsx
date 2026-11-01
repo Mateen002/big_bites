@@ -13,13 +13,23 @@ const links = [
   { href: '/options', label: 'Options', icon: '⚙' },
   { href: '/zones', label: 'Zones', icon: '⌖' },
   { href: '/promos', label: 'Promos', icon: '%' },
+  { href: '/roles', label: 'Roles & Permissions', icon: '🛡' },
 ];
+
+export type AdminUserState = {
+  id: string;
+  name: string;
+  email: string;
+  role?: string;
+  roleName?: string;
+  permissions?: string[];
+};
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [ready, setReady] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [user, setUser] = useState<AdminUserState | null>(null);
   const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
@@ -27,22 +37,34 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       setReady(true);
       return;
     }
-    if (!getToken()) {
+    const token = getToken();
+    if (!token) {
       router.replace('/login');
       return;
     }
+    // If user is already loaded in state, don't block navigation with loading screen
+    if (user) {
+      setReady(true);
+      return;
+    }
+
     adminApi
       .me()
-      .then(setUser)
-      .catch(() => router.replace('/login'))
-      .finally(() => setReady(true));
-  }, [pathname, router]);
+      .then((u) => {
+        setUser(u);
+        setReady(true);
+      })
+      .catch(() => {
+        setToken(null);
+        router.replace('/login');
+      });
+  }, [pathname, router, user]);
 
   useEffect(() => {
     setNavOpen(false);
   }, [pathname]);
 
-  if (!ready) {
+  if (!ready && pathname !== '/login') {
     return (
       <div className="grid min-h-screen place-items-center bg-ink-900 text-stone-400">
         <div className="text-center">
@@ -100,7 +122,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="mt-auto border-t border-white/5 p-5">
-          <p className="text-sm font-medium text-white">{user?.name}</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="truncate text-sm font-medium text-white">{user?.name || 'Administrator'}</p>
+            <span
+              className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                user?.role === 'super_admin'
+                  ? 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30'
+                  : 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/30'
+              }`}
+            >
+              {user?.roleName || (user?.role === 'super_admin' ? 'Super Admin' : 'Admin')}
+            </span>
+          </div>
           <p className="truncate text-xs text-stone-500">{user?.email}</p>
           <button
             type="button"

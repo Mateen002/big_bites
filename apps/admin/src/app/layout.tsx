@@ -1,15 +1,18 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { AdminShell } from '@/components/admin-shell';
 
 export const metadata: Metadata = {
   title: 'BigBites Admin',
-  description: 'Manage categories, products, options, zones, and orders',
+  description: 'Manage categories, products, options, zones, orders, and roles',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AdminShell>{children}</AdminShell>
+      </body>
     </html>
   );
 }

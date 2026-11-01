@@ -24,15 +24,19 @@ const STATUS_COLOR: Record<string, string> = {
   CANCELLED: 'bg-rose-500/20 text-rose-300',
 };
 
+let cachedOrders: AdminOrder[] = [];
+
 export default function OrdersPage() {
-  const [items, setItems] = useState<AdminOrder[]>([]);
+  const [items, setItems] = useState<AdminOrder[]>(() => cachedOrders);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('ALL');
   const [q, setQ] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
 
   async function load() {
-    setItems(await adminApi.orders());
+    const fresh = await adminApi.orders();
+    cachedOrders = fresh;
+    setItems(fresh);
   }
 
   useEffect(() => {

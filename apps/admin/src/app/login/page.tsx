@@ -34,8 +34,8 @@ export default function LoginPage() {
           <h1 className="mt-1 font-display text-3xl text-white">BigBites Admin</h1>
           <p className="mt-1 text-sm text-stone-400">Revenue, catalog & order control</p>
         </div>
-        <input name="email" type="email" required defaultValue="admin@bigbites.pk" className="input" placeholder="Email" />
-        <input name="password" type="password" required defaultValue="BigBites@Admin1" className="input" placeholder="Password" />
+        <input name="email" type="email" required className="input" placeholder="Email address" autoComplete="email" />
+        <input name="password" type="password" required className="input" placeholder="Password" autoComplete="current-password" />
         {error && <p className="text-sm text-rose-400">{error}</p>}
         <button type="submit" className="btn w-full" disabled={busy}>
           {busy ? 'Signing in…' : 'Sign in'}

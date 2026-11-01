@@ -15,6 +15,7 @@ import { ZonesModule } from './zones/zones.module';
 import { PromosModule } from './promos/promos.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { RolesModule } from './roles/roles.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -33,6 +34,7 @@ import { HealthController } from './health.controller';
     PromosModule,
     AnalyticsModule,
     UploadsModule,
+    RolesModule,
     ThrottlerModule.forRoot([
       {
         ttl: 60000,

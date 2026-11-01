@@ -29,18 +29,27 @@ const STATUS_COLOR: Record<string, string> = {
   CANCELLED: 'bg-rose-500/20 text-rose-300',
 };
 
+let cachedOverview: { days: number; data: AnalyticsOverview } | null = null;
+
 export default function DashboardPage() {
   const [days, setDays] = useState(30);
-  const [data, setData] = useState<AnalyticsOverview | null>(null);
+  const [data, setData] = useState<AnalyticsOverview | null>(() => {
+    return cachedOverview && cachedOverview.days === 30 ? cachedOverview.data : null;
+  });
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !cachedOverview || cachedOverview.days !== 30);
 
   useEffect(() => {
-    setLoading(true);
+    if (!cachedOverview || cachedOverview.days !== days) {
+      setLoading(true);
+    }
     setError('');
     adminApi
       .analytics(days)
-      .then(setData)
+      .then((res) => {
+        cachedOverview = { days, data: res };
+        setData(res);
+      })
       .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load'))
       .finally(() => setLoading(false));
   }, [days]);

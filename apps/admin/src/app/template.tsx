@@ -1,7 +1,3 @@
-'use client';
-
-import { AdminShell } from '@/components/admin-shell';
-
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <AdminShell>{children}</AdminShell>;
+export default function Template({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }

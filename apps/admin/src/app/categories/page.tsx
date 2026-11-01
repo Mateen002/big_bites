@@ -4,15 +4,20 @@ import { FormEvent, useEffect, useState } from 'react';
 import { ImageField } from '@/components/image-field';
 import { adminApi, assetUrl, type AdminCategory, type AdminOptionGroup } from '@/lib/api';
 
+let cachedCatItems: AdminCategory[] = [];
+let cachedCatGroups: AdminOptionGroup[] = [];
+
 export default function CategoriesPage() {
-  const [items, setItems] = useState<AdminCategory[]>([]);
-  const [groups, setGroups] = useState<AdminOptionGroup[]>([]);
+  const [items, setItems] = useState<AdminCategory[]>(() => cachedCatItems);
+  const [groups, setGroups] = useState<AdminOptionGroup[]>(() => cachedCatGroups);
   const [editing, setEditing] = useState<AdminCategory | null>(null);
   const [image, setImage] = useState('');
   const [error, setError] = useState('');
 
   async function load() {
     const [c, g] = await Promise.all([adminApi.categories(), adminApi.optionGroups()]);
+    cachedCatItems = c;
+    cachedCatGroups = g;
     setItems(c);
     setGroups(g);
   }

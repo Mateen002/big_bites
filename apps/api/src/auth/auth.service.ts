@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 
-export type AuthRole = 'admin' | 'customer';
+export type AuthRole = 'super_admin' | 'admin' | 'customer';
 
 @Injectable()
 export class AuthService {
@@ -27,29 +27,66 @@ export class AuthService {
   }
 
   async adminLogin(email: string, password: string) {
-    const user = await this.prisma.adminUser.findUnique({ where: { email } });
+    const user = await this.prisma.adminUser.findUnique({
+      where: { email },
+      include: { role: true },
+    });
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       throw new UnauthorizedException('Invalid credentials');
     }
+    const roleSlug = (user.role?.slug || 'super_admin') as AuthRole;
+    const roleName = user.role?.name || 'Super Admin';
+    const permissions = user.role?.permissions || [];
+
     const accessToken = await this.sign({
       sub: user.id,
       email: user.email,
       name: user.name,
-      role: 'admin',
+      role: roleSlug,
     });
     return {
       accessToken,
-      user: { id: user.id, email: user.email, name: user.name, role: 'admin' as const },
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: roleSlug,
+        roleName,
+        permissions,
+      },
     };
   }
 
   async adminMe(userId: string) {
     const user = await this.prisma.adminUser.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            permissions: true,
+          },
+        },
+      },
     });
     if (!user) throw new UnauthorizedException();
-    return { ...user, role: 'admin' as const };
+    const roleSlug = (user.role?.slug || 'super_admin') as AuthRole;
+    const roleName = user.role?.name || 'Super Admin';
+    const permissions = user.role?.permissions || [];
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: roleSlug,
+      roleName,
+      permissions,
+    };
   }
 
   async customerSignup(input: {

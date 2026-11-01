@@ -50,7 +50,24 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     }),
-  me: () => adminFetch<{ id: string; email: string; name: string }>('/auth/me'),
+  me: () =>
+    adminFetch<{
+      id: string;
+      email: string;
+      name: string;
+      role?: string;
+      roleName?: string;
+      permissions?: string[];
+    }>('/auth/me'),
+  roles: () => adminFetch<RolesResponse>('/roles'),
+  createRole: (body: { name: string; description?: string; permissions: string[] }) =>
+    adminFetch<AdminRole>('/roles', { method: 'POST', body: JSON.stringify(body) }),
+  updateRole: (
+    id: string,
+    body: { name?: string; description?: string; permissions?: string[] },
+  ) => adminFetch<AdminRole>(`/roles/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  deleteRole: (id: string) =>
+    adminFetch<{ ok: boolean; message: string }>(`/roles/${id}`, { method: 'DELETE' }),
   categories: () => adminFetch<AdminCategory[]>('/categories?admin=1'),
   createCategory: (body: unknown) =>
     adminFetch('/categories', { method: 'POST', body: JSON.stringify(body) }),
@@ -237,4 +254,26 @@ export type AdminOrder = {
   createdAt: string;
   items: { productName: string; quantity: number; fulfillmentType: string }[];
   deliveryZone: { name: string };
+};
+
+export type AdminRole = {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  permissions: string[];
+  isSystem: boolean;
+  createdAt: string;
+  _count?: { users: number };
+};
+
+export type AvailablePermission = {
+  key: string;
+  label: string;
+  module: string;
+};
+
+export type RolesResponse = {
+  roles: AdminRole[];
+  availablePermissions: AvailablePermission[];
 };
