@@ -118,8 +118,21 @@ export class PromosService {
     }
   }
 
-  async remove(id: string) {
+  async remove(id: string, force = false) {
     this.clearCache();
+    if (force) {
+      const orderCount = await this.prisma.order.count({ where: { promoId: id } });
+      if (orderCount > 0) {
+        await this.prisma.promo.update({ where: { id }, data: { isActive: false } });
+        return {
+          ok: true,
+          softDeleted: true,
+          message: `Promo is linked to ${orderCount} order(s); disabled instead of permanently deleted to preserve records.`,
+        };
+      }
+      await this.prisma.promo.delete({ where: { id } });
+      return { ok: true, message: 'Promo permanently deleted' };
+    }
     await this.prisma.promo.update({ where: { id }, data: { isActive: false } });
     return { ok: true };
   }

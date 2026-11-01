@@ -89,7 +89,7 @@ export class PromosController {
 
   @UseGuards(AdminAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.promos.remove(id);
+  remove(@Param('id') id: string, @Query('force') force?: string) {
+    return this.promos.remove(id, force === '1' || force === 'true');
   }
 }

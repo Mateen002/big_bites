@@ -114,10 +114,15 @@ export const adminApi = {
     adminFetch(`/zones/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   deleteZone: (id: string) => adminFetch(`/zones/${id}`, { method: 'DELETE' }),
   promos: () => adminFetch<AdminPromo[]>('/promos'),
-  createPromo: (body: unknown) => adminFetch('/promos', { method: 'POST', body: JSON.stringify(body) }),
+  createPromo: (body: unknown) =>
+    adminFetch<AdminPromo>('/promos', { method: 'POST', body: JSON.stringify(body) }),
   updatePromo: (id: string, body: unknown) =>
-    adminFetch(`/promos/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
-  deletePromo: (id: string) => adminFetch(`/promos/${id}`, { method: 'DELETE' }),
+    adminFetch<AdminPromo>(`/promos/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  deletePromo: (id: string, force = false) =>
+    adminFetch<{ ok: boolean; softDeleted?: boolean; message?: string }>(
+      `/promos/${id}${force ? '?force=1' : ''}`,
+      { method: 'DELETE' },
+    ),
   orders: () => adminFetch<AdminOrder[]>('/orders'),
   updateOrderStatus: (id: string, status: string) =>
     adminFetch(`/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
