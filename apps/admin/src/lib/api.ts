@@ -271,11 +271,26 @@ export type AdminOrder = {
   status: string;
   customerName: string;
   customerPhone: string;
+  customerEmail?: string | null;
+  addressLine?: string | null;
+  notes?: string | null;
+  scheduledFor?: string | null;
+  subtotalPkr?: number;
+  deliveryFeePkr?: number;
+  discountPkr?: number;
   totalPkr: number;
   paymentMethod: string;
   paymentStatus: string;
   createdAt: string;
-  items: { productName: string; quantity: number; fulfillmentType: string }[];
+  items: {
+    productName: string;
+    quantity: number;
+    fulfillmentType: string;
+    unitPricePkr?: number;
+    lineTotalPkr?: number;
+    notes?: string | null;
+    selectionsJson?: any;
+  }[];
   deliveryZone: { name: string };
 };
 
