@@ -3,10 +3,12 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/components/cart-provider';
+import { useStoreStatus } from '@/components/store-status-provider';
 import { formatPkr, fulfillmentLabel } from '@/lib/api';
 
 export default function CartPage() {
   const { cart, setOpen, updateQty, removeItem } = useCart();
+  const { isOpen } = useStoreStatus();
 
   useEffect(() => {
     setOpen(false);
@@ -63,9 +65,15 @@ export default function CartPage() {
             </ul>
             <div className="mt-8 flex items-center justify-between">
               <p className="text-lg font-semibold text-ink">Subtotal {formatPkr(cart.subtotalPkr)}</p>
-              <Link href="/checkout" className="btn-primary">
-                Checkout
-              </Link>
+              {isOpen ? (
+                <Link href="/checkout" className="btn-primary">
+                  Checkout
+                </Link>
+              ) : (
+                <span className="rounded-xl bg-stone-800 border border-white/10 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-stone-400 cursor-not-allowed">
+                  Store Closed
+                </span>
+              )}
             </div>
           </>
         )}

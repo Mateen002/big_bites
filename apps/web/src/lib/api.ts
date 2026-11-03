@@ -286,7 +286,13 @@ async function request<T>(
   return fetchPromise;
 }
 
+export type StoreStatus = {
+  isOpen: boolean;
+  notice: string;
+};
+
 export const api = {
+  storeStatus: () => request<StoreStatus>('/store/status', { auth: false }),
   categories: (fulfillment?: FulfillmentType) =>
     request<Category[]>(
       `/categories${fulfillment ? `?fulfillment=${fulfillment}` : ''}`,

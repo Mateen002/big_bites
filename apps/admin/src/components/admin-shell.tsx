@@ -33,6 +33,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUserState | null>(null);
   const [navOpen, setNavOpen] = useState(false);
 
+  // Store Online / Offline Status State
+  const [storeOpen, setStoreOpen] = useState<boolean | null>(null);
+  const [storeNotice, setStoreNotice] = useState('');
+  const [storeToggling, setStoreToggling] = useState(false);
+  const [showStoreModal, setShowStoreModal] = useState(false);
+  const [noticeInput, setNoticeInput] = useState('');
+
   // Self-Service Change Password State
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -40,6 +47,47 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changeStatus, setChangeStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [changeBusy, setChangeBusy] = useState(false);
+
+  // Fetch Store Status on mount
+  useEffect(() => {
+    if (pathname === '/login') return;
+    adminApi
+      .getStoreStatus()
+      .then((s) => {
+        setStoreOpen(s.isOpen);
+        setStoreNotice(s.notice);
+        setNoticeInput(s.notice);
+      })
+      .catch(() => {});
+  }, [pathname]);
+
+  async function handleConfirmStoreToggle(openTarget: boolean, customNotice?: string) {
+    setStoreToggling(true);
+    try {
+      const res = await adminApi.updateStoreStatus({
+        isOpen: openTarget,
+        notice: customNotice !== undefined ? customNotice : noticeInput,
+      });
+      setStoreOpen(res.isOpen);
+      setStoreNotice(res.notice);
+      setShowStoreModal(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to update store status');
+    } finally {
+      setStoreToggling(false);
+    }
+  }
+
+  function handleStoreToggleClick() {
+    if (storeOpen) {
+      // Opening modal to confirm closing and allow custom closed notice
+      setNoticeInput(storeNotice || 'BigBites is currently closed for orders. Feel free to explore our menu!');
+      setShowStoreModal(true);
+    } else {
+      // Immediately reopen store
+      handleConfirmStoreToggle(true);
+    }
+  }
 
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
@@ -157,6 +205,43 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
 
+          {/* Store Live Operational Status Switch */}
+          {storeOpen !== null && (
+            <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-3 shadow-inner">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`h-2.5 w-2.5 rounded-full ${
+                      storeOpen
+                        ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse'
+                        : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]'
+                    }`}
+                  />
+                  <div>
+                    <p className="text-xs font-bold leading-none text-white">
+                      {storeOpen ? 'Store Open' : 'Store Closed'}
+                    </p>
+                    <p className="text-[10px] text-stone-400 leading-none mt-1">
+                      {storeOpen ? 'Accepting Orders' : 'Orders Paused'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleStoreToggleClick}
+                  disabled={storeToggling}
+                  className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition ${
+                    storeOpen
+                      ? 'border border-rose-500/30 bg-rose-500/15 text-rose-300 hover:bg-rose-500/25'
+                      : 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'
+                  }`}
+                >
+                  {storeToggling ? '…' : storeOpen ? 'Close' : 'Open'}
+                </button>
+              </div>
+            </div>
+          )}
+
           <nav className="mt-8 space-y-1">
             {links.map((l) => (
               <Link
@@ -236,6 +321,26 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2">
+            {storeOpen !== null && (
+              <button
+                type="button"
+                onClick={handleStoreToggleClick}
+                disabled={storeToggling}
+                className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-bold transition border ${
+                  storeOpen
+                    ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
+                    : 'border-rose-500/40 bg-rose-500/15 text-rose-300'
+                }`}
+                title={storeOpen ? 'Store is Open. Tap to close.' : 'Store is Closed. Tap to open.'}
+              >
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    storeOpen ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'
+                  }`}
+                />
+                <span>{storeToggling ? '…' : storeOpen ? 'Open' : 'Closed'}</span>
+              </button>
+            )}
             <Link
               href="/orders"
               className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition ${
@@ -344,6 +449,66 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Store Close / Notice Configuration Modal */}
+      {showStoreModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-ink-900 p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl">🌙</span>
+                <div>
+                  <h3 className="font-display text-lg font-bold text-white">Pause Store & Orders</h3>
+                  <p className="text-xs text-stone-400">Switch store to Closed mode</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowStoreModal(false)}
+                className="text-stone-400 hover:text-white transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              <p className="text-xs text-stone-300 leading-relaxed">
+                When closed, customers can still browse all products, but adding to cart and checkout will be disabled with a <strong className="text-accent font-bold">"Store Closed"</strong> tag.
+              </p>
+
+              <div>
+                <label className="block text-xs font-semibold text-stone-300 mb-1.5">
+                  Announcement Message shown to customers:
+                </label>
+                <textarea
+                  value={noticeInput}
+                  onChange={(e) => setNoticeInput(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-xl border border-white/10 bg-ink-800 px-3.5 py-2.5 text-xs text-white placeholder-stone-500 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  placeholder="e.g. BigBites is currently closed for orders. Kitchen reopens tomorrow at 12:00 PM!"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-white/5">
+                <button
+                  type="button"
+                  onClick={() => setShowStoreModal(false)}
+                  className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-stone-300 hover:bg-white/10"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleConfirmStoreToggle(false)}
+                  disabled={storeToggling}
+                  className="rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-rose-500 shadow-md shadow-rose-600/30 transition disabled:opacity-50"
+                >
+                  {storeToggling ? 'Updating…' : 'Yes, Close Store'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

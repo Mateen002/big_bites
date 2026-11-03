@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useCart } from './cart-provider';
+import { useStoreStatus } from './store-status-provider';
 import { AnimatedNumber } from './animated-number';
 import { formatPkr, fulfillmentLabel } from '@/lib/api';
 
 export function CartDrawer() {
   const { cart, open, setOpen, updateQty, removeItem } = useCart();
+  const { isOpen } = useStoreStatus();
   const [mounted, setMounted] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
@@ -125,15 +127,21 @@ export function CartDrawer() {
               Rs <AnimatedNumber value={cart.subtotalPkr} />
             </span>
           </div>
-          <Link
-            href="/checkout"
-            onClick={() => setOpen(false)}
-            className={`btn-primary w-full py-3.5 text-center text-sm font-black uppercase tracking-wider ${
-              !cart.items.length ? 'pointer-events-none opacity-40' : ''
-            }`}
-          >
-            Proceed to Checkout →
-          </Link>
+          {isOpen ? (
+            <Link
+              href="/checkout"
+              onClick={() => setOpen(false)}
+              className={`btn-primary w-full py-3.5 text-center text-sm font-black uppercase tracking-wider ${
+                !cart.items.length ? 'pointer-events-none opacity-40' : ''
+              }`}
+            >
+              Proceed to Checkout →
+            </Link>
+          ) : (
+            <div className="w-full rounded-xl bg-stone-800 border border-white/10 py-3.5 text-center text-xs font-black uppercase tracking-wider text-stone-400 cursor-not-allowed">
+              Store Closed · Orders Paused
+            </div>
+          )}
         </div>
       </aside>
     </>

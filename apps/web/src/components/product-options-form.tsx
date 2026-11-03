@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useCart } from './cart-provider';
+import { useStoreStatus } from './store-status-provider';
 import { formatPkr, type OptionGroup, type Product } from '@/lib/api';
 
 type GroupSelections = Record<string, Record<string, number>>;
@@ -24,6 +25,7 @@ export function ProductOptionsForm({ product }: { product: Product }) {
   const [busy, setBusy] = useState(false);
   const [added, setAdded] = useState(false);
   const { addItem, setOpen } = useCart();
+  const { isOpen, notice } = useStoreStatus();
 
   const extra = useMemo(() => {
     let sum = 0;
@@ -88,6 +90,10 @@ export function ProductOptionsForm({ product }: { product: Product }) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    if (!isOpen) {
+      setError('BigBites is currently closed for orders.');
+      return;
+    }
     for (const g of groups) {
       const groupMap = selections[g.id] || {};
       const count =
@@ -225,7 +231,7 @@ export function ProductOptionsForm({ product }: { product: Product }) {
           <button
             type="button"
             className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2E0A4E] text-base font-bold text-amber-300 transition hover:bg-amber-400 hover:text-purple-950 active:scale-90 disabled:opacity-30"
-            disabled={qty <= 1}
+            disabled={!isOpen || qty <= 1}
             onClick={() => setQty((q) => Math.max(1, q - 1))}
           >
             −
@@ -233,7 +239,8 @@ export function ProductOptionsForm({ product }: { product: Product }) {
           <span className="w-8 text-center text-sm font-black text-amber-300">{qty}</span>
           <button
             type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2E0A4E] text-base font-bold text-amber-300 transition hover:bg-amber-400 hover:text-purple-950 active:scale-90"
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2E0A4E] text-base font-bold text-amber-300 transition hover:bg-amber-400 hover:text-purple-950 active:scale-90 disabled:opacity-30"
+            disabled={!isOpen}
             onClick={() => setQty((q) => Math.min(99, q + 1))}
           >
             +
@@ -241,12 +248,27 @@ export function ProductOptionsForm({ product }: { product: Product }) {
         </div>
         <button
           type="submit"
-          disabled={busy}
-          className="btn-primary flex-1 py-3 text-sm font-black uppercase tracking-wider"
+          disabled={busy || !isOpen}
+          className={`flex-1 py-3 text-sm font-black uppercase tracking-wider rounded-xl transition ${
+            !isOpen
+              ? 'bg-stone-800 text-stone-400 border border-white/10 cursor-not-allowed'
+              : 'btn-primary'
+          }`}
         >
-          {busy ? 'Adding…' : added ? 'Added to cart ✓' : `Add to Cart · ${formatPkr(unit * qty)}`}
+          {!isOpen
+            ? 'Store Closed'
+            : busy
+              ? 'Adding…'
+              : added
+                ? 'Added to cart ✓'
+                : `Add to Cart · ${formatPkr(unit * qty)}`}
         </button>
       </div>
+      {!isOpen && (
+        <p className="rounded-xl border border-amber-400/20 bg-amber-500/10 p-2.5 text-center text-xs font-semibold text-amber-200">
+          🌙 {notice || 'BigBites is currently closed for orders. Feel free to explore our menu!'}
+        </p>
+      )}
       {error && <p className="rounded-xl border border-rose-500/40 bg-rose-950/60 p-2.5 text-sm font-semibold text-rose-300">{error}</p>}
     </form>
   );

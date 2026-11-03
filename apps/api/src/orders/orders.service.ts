@@ -94,6 +94,13 @@ export class OrdersService {
     customerId?: string,
   ) {
     if (!sessionId) throw new BadRequestException('Missing cart session');
+    const isStoreOpen = await this.settings.isStoreOpen();
+    if (!isStoreOpen) {
+      const status = await this.settings.getStoreStatus();
+      throw new BadRequestException(
+        status.notice || 'BigBites is currently closed and not accepting new orders. Please check back later!',
+      );
+    }
     const cart = await this.cart.getCart(sessionId);
     if (!cart.items.length) throw new BadRequestException('Cart is empty');
 

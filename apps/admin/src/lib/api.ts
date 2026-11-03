@@ -110,6 +110,12 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+  getStoreStatus: () => adminFetch<{ isOpen: boolean; notice: string }>('/store/status'),
+  updateStoreStatus: (body: { isOpen: boolean; notice?: string }) =>
+    adminFetch<{ isOpen: boolean; notice: string }>('/store/status', {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
   createRole: (body: { name: string; description?: string; permissions: string[] }) =>
     adminFetch<AdminRole>('/roles', { method: 'POST', body: JSON.stringify(body) }),
   updateRole: (

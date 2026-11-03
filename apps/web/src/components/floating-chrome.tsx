@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useCart } from './cart-provider';
+import { useStoreStatus } from './store-status-provider';
 import { AnimatedNumber } from './animated-number';
 import { formatPkr } from '@/lib/api';
 import { CartDrawer } from './floating-cart';
@@ -11,6 +12,7 @@ import { CartDrawer } from './floating-cart';
 export function FloatingChrome() {
   const [showCta, setShowCta] = useState(false);
   const { cart, open, setOpen } = useCart();
+  const { isOpen } = useStoreStatus();
   const pathname = usePathname();
   const hideChrome = open || pathname.startsWith('/checkout') || pathname.startsWith('/orders');
 
@@ -79,12 +81,18 @@ export function FloatingChrome() {
               >
                 Cart
               </button>
-              <Link
-                href="/checkout"
-                className="rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-2 text-xs font-black text-purple-950 shadow-md shadow-amber-400/20"
-              >
-                Checkout →
-              </Link>
+              {isOpen ? (
+                <Link
+                  href="/checkout"
+                  className="rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-2 text-xs font-black text-purple-950 shadow-md shadow-amber-400/20"
+                >
+                  Checkout →
+                </Link>
+              ) : (
+                <span className="rounded-xl bg-stone-800 border border-white/10 px-3.5 py-2 text-xs font-black text-stone-400">
+                  Store Closed
+                </span>
+              )}
             </div>
           </div>
         </div>

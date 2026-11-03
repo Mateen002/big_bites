@@ -40,5 +40,33 @@ export class SettingsService {
     this.lastFetched = Date.now();
     return this.getAll();
   }
+
+  async isStoreOpen(): Promise<boolean> {
+    const val = await this.get('isStoreOpen', 'true');
+    return val !== 'false';
+  }
+
+  async getStoreStatus(): Promise<{ isOpen: boolean; notice: string }> {
+    const all = await this.getAll();
+    const isOpen = all['isStoreOpen'] !== 'false';
+    const notice =
+      all['storeClosedNotice'] ||
+      'BigBites is currently closed for orders. Feel free to explore our menu!';
+    return { isOpen, notice };
+  }
+
+  async setStoreStatus(
+    isOpen: boolean,
+    notice?: string,
+  ): Promise<{ isOpen: boolean; notice: string }> {
+    const updates: Record<string, string> = {
+      isStoreOpen: isOpen ? 'true' : 'false',
+    };
+    if (notice !== undefined) {
+      updates['storeClosedNotice'] = notice.trim();
+    }
+    await this.setMany(updates);
+    return this.getStoreStatus();
+  }
 }
 

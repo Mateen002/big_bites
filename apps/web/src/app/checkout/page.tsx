@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/components/cart-provider';
 import { useAuth } from '@/components/auth-provider';
 import { useLocation } from '@/components/location-provider';
+import { useStoreStatus } from '@/components/store-status-provider';
 import {
   api,
   formatPkr,
@@ -19,6 +20,7 @@ import {
 export default function CheckoutPage() {
   const { cart, refresh } = useCart();
   const { user, loading: authLoading } = useAuth();
+  const { isOpen, notice } = useStoreStatus();
   const {
     selectedZone,
     setSelectedZone,
@@ -111,6 +113,11 @@ export default function CheckoutPage() {
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
+
+    if (!isOpen) {
+      setError(notice || 'BigBites is currently closed and not accepting new orders.');
+      return;
+    }
 
     if (!isValidPakistaniPhone(phone)) {
       setError('Please provide a valid Pakistani mobile number (e.g. 0300-1234567 or +923001234567)');
@@ -416,12 +423,22 @@ export default function CheckoutPage() {
 
           {error && <p className="rounded-xl border border-red-500/40 bg-red-950/60 p-4 text-sm font-semibold text-red-200">{error}</p>}
 
+          {!isOpen && (
+            <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-4 text-sm font-semibold text-amber-200">
+              🌙 {notice || 'BigBites is currently closed and not accepting new orders. Please check back later!'}
+            </div>
+          )}
+
           <button
             type="submit"
-            disabled={busy}
-            className="btn-primary w-full py-4 text-base font-black disabled:opacity-50"
+            disabled={busy || !isOpen}
+            className={`w-full py-4 text-base font-black rounded-xl transition ${
+              !isOpen
+                ? 'bg-stone-800 text-stone-400 border border-white/10 cursor-not-allowed'
+                : 'btn-primary disabled:opacity-50'
+            }`}
           >
-            {busy ? 'Placing order…' : `Confirm Order · ${formatPkr(total)}`}
+            {!isOpen ? 'Store Closed' : busy ? 'Placing order…' : `Confirm Order · ${formatPkr(total)}`}
           </button>
         </form>
 

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useCart } from './cart-provider';
 import { useAuth } from './auth-provider';
+import { useStoreStatus } from './store-status-provider';
 import { AnimatedNumber } from './animated-number';
 import { api, formatPkr, assetUrl, fulfillmentLabel, type Category, type Product } from '@/lib/api';
 
@@ -84,6 +85,7 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { cart, setOpen } = useCart();
   const { user, logout } = useAuth();
+  const { isOpen, notice } = useStoreStatus();
   const pathname = usePathname();
   const isHome = pathname === '/';
   const [cartBump, setCartBump] = useState(false);
@@ -429,6 +431,14 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
             </button>
           </div>
         </div>
+
+        {/* Global Store Closed Notification Banner */}
+        {!isOpen && (
+          <div className="mx-auto mt-2 max-w-6xl overflow-hidden rounded-xl border border-amber-400/40 bg-[#1e0531]/95 px-4 py-2 text-center text-xs sm:text-sm font-semibold text-amber-200 shadow-xl backdrop-blur-md flex items-center justify-center gap-2">
+            <span className="text-base leading-none">🌙</span>
+            <span>{notice || 'BigBites is currently closed for orders. Feel free to explore our menu!'}</span>
+          </div>
+        )}
       </header>
 
       {/* Instant Search Modal */}

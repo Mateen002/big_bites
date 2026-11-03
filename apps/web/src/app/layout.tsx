@@ -3,6 +3,7 @@ import './globals.css';
 import { CartProvider } from '@/components/cart-provider';
 import { AuthProvider } from '@/components/auth-provider';
 import { LocationProvider } from '@/components/location-provider';
+import { StoreStatusProvider } from '@/components/store-status-provider';
 import { FloatingChrome } from '@/components/floating-chrome';
 import { PageTransition } from '@/components/page-transition';
 import { SiteHeader } from '@/components/site-header';
@@ -24,17 +25,28 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     categories = [];
   }
 
+  let initialStoreStatus: Awaited<ReturnType<typeof api.storeStatus>> | undefined;
+  try {
+    initialStoreStatus = await api.storeStatus();
+  } catch {
+    initialStoreStatus = {
+      isOpen: true,
+      notice: 'BigBites is currently closed for orders. Feel free to explore our menu!',
+    };
+  }
+
   return (
     <html lang="en">
       <body>
-        <AuthProvider>
-          <LocationProvider>
-            <CartProvider>
-              <SiteHeader categories={categories} />
-              <main className="min-h-screen">
-                <PageTransition>{children}</PageTransition>
-              </main>
-          <footer className="border-t border-amber-400/25 bg-[#120220] text-white">
+        <StoreStatusProvider initialStatus={initialStoreStatus}>
+          <AuthProvider>
+            <LocationProvider>
+              <CartProvider>
+                <SiteHeader categories={categories} />
+                <main className="min-h-screen">
+                  <PageTransition>{children}</PageTransition>
+                </main>
+            <footer className="border-t border-amber-400/25 bg-[#120220] text-white">
             <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 md:grid-cols-4">
               <div>
                 <Link href="/" className="inline-block">
@@ -117,6 +129,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </CartProvider>
           </LocationProvider>
         </AuthProvider>
+      </StoreStatusProvider>
       </body>
     </html>
   );
