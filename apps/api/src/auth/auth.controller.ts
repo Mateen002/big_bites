@@ -56,6 +56,15 @@ export class AuthController {
     return this.auth.adminMe(req.user.userId);
   }
 
+  @UseGuards(AdminAuthGuard)
+  @Post('change-password')
+  changePassword(
+    @Req() req: { user: { userId: string } },
+    @Body() dto: { currentPassword?: string; newPassword: string },
+  ) {
+    return this.auth.changeAdminPassword(req.user.userId, dto.newPassword, dto.currentPassword);
+  }
+
   @Post('customer/signup')
   customerSignup(@Body() dto: SignupDto) {
     return this.auth.customerSignup(dto);

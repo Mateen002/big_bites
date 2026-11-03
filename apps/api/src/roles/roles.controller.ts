@@ -51,6 +51,15 @@ export class RolesController {
     return this.roles.deleteUser(req.user, id);
   }
 
+  @Post('users/:id/reset-password')
+  resetPassword(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() body: { newPassword: string },
+  ) {
+    return this.roles.resetUserPassword(req.user, id, body.newPassword);
+  }
+
   // --- Role Specific Endpoints ---
 
   @Get(':id')

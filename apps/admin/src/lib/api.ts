@@ -90,6 +90,16 @@ export const adminApi = {
     adminFetch<{ ok: boolean; message: string }>(`/roles/users/${id}`, {
       method: 'DELETE',
     }),
+  resetUserPassword: (id: string, newPassword: string) =>
+    adminFetch<{ ok: boolean; message: string }>(`/roles/users/${id}/reset-password`, {
+      method: 'POST',
+      body: JSON.stringify({ newPassword }),
+    }),
+  changePassword: (body: { currentPassword?: string; newPassword: string }) =>
+    adminFetch<{ ok: boolean; message: string }>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
   createRole: (body: { name: string; description?: string; permissions: string[] }) =>
     adminFetch<AdminRole>('/roles', { method: 'POST', body: JSON.stringify(body) }),
   updateRole: (

@@ -38,6 +38,44 @@ export default function UsersPage() {
   // Delete State
   const [deletingUser, setDeletingUser] = useState<AdminUserMember | null>(null);
 
+  // Super Admin Direct Password Reset State
+  const [resetUser, setResetUser] = useState<AdminUserMember | null>(null);
+  const [resetPasswordInput, setResetPasswordInput] = useState('');
+  const [resetBusy, setResetBusy] = useState(false);
+  const [resetStatus, setResetStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  function generateStrongPassword() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*';
+    let pwd = '';
+    for (let i = 0; i < 8; i++) {
+      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setResetPasswordInput(`BigBites#${pwd}`);
+  }
+
+  async function handleResetPassword(e: FormEvent) {
+    e.preventDefault();
+    if (!resetUser) return;
+    setResetBusy(true);
+    setResetStatus(null);
+    try {
+      const res = await adminApi.resetUserPassword(resetUser.id, resetPasswordInput.trim());
+      setResetStatus({ type: 'success', message: res.message });
+      setTimeout(() => {
+        setResetUser(null);
+        setResetPasswordInput('');
+        setResetStatus(null);
+      }, 2500);
+    } catch (err) {
+      setResetStatus({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Password reset failed',
+      });
+    } finally {
+      setResetBusy(false);
+    }
+  }
+
   async function load() {
     try {
       const [uList, rData, me] = await Promise.all([
@@ -384,6 +422,20 @@ export default function UsersPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          {(isSuperAdmin || isCurrent) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setResetUser(member);
+                                setResetPasswordInput('');
+                                setResetStatus(null);
+                              }}
+                              className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 text-xs font-semibold text-amber-300 transition hover:bg-amber-500/20"
+                              title="Reset Password"
+                            >
+                              🔑 Reset Password
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => openEditModal(member)}
@@ -549,6 +601,89 @@ export default function UsersPage() {
                 {busy ? 'Removing...' : 'Confirm Remove'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Super Admin Direct Password Reset Modal */}
+      {resetUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-amber-500/30 bg-ink-900 p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl">🔑</span>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Reset User Password</h3>
+                  <p className="text-xs text-stone-400">
+                    Set a new password for <strong className="text-white">{resetUser.name}</strong> ({resetUser.email}).
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setResetUser(null)}
+                className="rounded-lg p-1 text-stone-400 hover:bg-white/10 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleResetPassword} className="mt-5 space-y-4">
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400">
+                    New Password *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={generateStrongPassword}
+                    className="text-xs font-semibold text-accent hover:underline"
+                  >
+                    🎲 Generate Strong Password
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  required
+                  placeholder="Minimum 6 characters"
+                  value={resetPasswordInput}
+                  onChange={(e) => setResetPasswordInput(e.target.value)}
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-ink-800 px-3.5 py-2.5 text-sm font-mono text-white placeholder-stone-500 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+                <p className="mt-1 text-[11px] text-stone-500">
+                  Must be at least 6 characters. The user can log in with this password immediately.
+                </p>
+              </div>
+
+              {resetStatus && (
+                <div
+                  className={`rounded-xl border p-3 text-xs ${
+                    resetStatus.type === 'success'
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                      : 'border-rose-500/30 bg-rose-500/10 text-rose-300'
+                  }`}
+                >
+                  {resetStatus.message}
+                </div>
+              )}
+
+              <div className="mt-6 flex items-center justify-end gap-3 border-t border-white/10 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setResetUser(null)}
+                  className="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold text-stone-400 transition hover:bg-white/5 hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={resetBusy || !resetPasswordInput.trim()}
+                  className="rounded-xl bg-amber-500 px-5 py-2 text-xs font-bold text-ink-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400 disabled:opacity-50"
+                >
+                  {resetBusy ? 'Resetting...' : 'Save New Password'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

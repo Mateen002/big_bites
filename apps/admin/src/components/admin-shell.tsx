@@ -33,6 +33,49 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUserState | null>(null);
   const [navOpen, setNavOpen] = useState(false);
 
+  // Self-Service Change Password State
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changeStatus, setChangeStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [changeBusy, setChangeBusy] = useState(false);
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      setChangeStatus({ type: 'error', message: 'New password must be at least 6 characters long' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setChangeStatus({ type: 'error', message: 'New passwords do not match' });
+      return;
+    }
+    setChangeBusy(true);
+    setChangeStatus(null);
+    try {
+      const res = await adminApi.changePassword({
+        currentPassword: currentPassword || undefined,
+        newPassword,
+      });
+      setChangeStatus({ type: 'success', message: res.message || 'Password changed successfully' });
+      setTimeout(() => {
+        setShowPasswordModal(false);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setChangeStatus(null);
+      }, 2000);
+    } catch (err) {
+      setChangeStatus({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Failed to change password',
+      });
+    } finally {
+      setChangeBusy(false);
+    }
+  }
+
   useEffect(() => {
     if (pathname === '/login') {
       setReady(true);
@@ -136,16 +179,31 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </span>
           </div>
           <p className="truncate text-xs text-stone-500">{user?.email}</p>
-          <button
-            type="button"
-            className="mt-3 text-xs font-semibold text-accent hover:underline"
-            onClick={() => {
-              setToken(null);
-              router.push('/login');
-            }}
-          >
-            Sign out
-          </button>
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              className="text-xs font-semibold text-stone-400 transition hover:text-white flex items-center gap-1.5"
+              onClick={() => {
+                setShowPasswordModal(true);
+                setChangeStatus(null);
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+              }}
+            >
+              🔑 Change Password
+            </button>
+            <button
+              type="button"
+              className="text-xs font-semibold text-accent hover:underline"
+              onClick={() => {
+                setToken(null);
+                router.push('/login');
+              }}
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -161,6 +219,102 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </header>
         <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
       </div>
+
+      {/* Self-Service Change Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-ink-900 p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl">🔑</span>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Change Password</h3>
+                  <p className="text-xs text-stone-400">Update your account login password</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPasswordModal(false)}
+                className="rounded-lg p-1 text-stone-400 hover:bg-white/10 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleChangePassword} className="mt-5 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400">
+                  Current Password (optional for super admin)
+                </label>
+                <input
+                  type="password"
+                  placeholder="Enter current password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-ink-800 px-3.5 py-2.5 text-sm text-white placeholder-stone-500 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400">
+                  New Password *
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Minimum 6 characters"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-ink-800 px-3.5 py-2.5 text-sm text-white placeholder-stone-500 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-stone-400">
+                  Confirm New Password *
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Re-enter new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-ink-800 px-3.5 py-2.5 text-sm text-white placeholder-stone-500 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+              </div>
+
+              {changeStatus && (
+                <div
+                  className={`rounded-xl border p-3 text-xs ${
+                    changeStatus.type === 'success'
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                      : 'border-rose-500/30 bg-rose-500/10 text-rose-300'
+                  }`}
+                >
+                  {changeStatus.message}
+                </div>
+              )}
+
+              <div className="mt-6 flex items-center justify-end gap-3 border-t border-white/10 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold text-stone-400 transition hover:bg-white/5 hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={changeBusy || !newPassword.trim() || !confirmPassword.trim()}
+                  className="rounded-xl bg-accent px-5 py-2 text-xs font-bold text-ink-950 shadow-lg shadow-accent/20 transition hover:bg-accent/90 disabled:opacity-50"
+                >
+                  {changeBusy ? 'Updating...' : 'Update Password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

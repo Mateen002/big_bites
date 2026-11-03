@@ -446,5 +446,39 @@ export class RolesService implements OnModuleInit {
     await this.prisma.adminUser.delete({ where: { id } });
     return { ok: true, message: `User ${targetUser.name} deleted successfully` };
   }
+
+  async resetUserPassword(currentUser: any, targetUserId: string, newPassword: string) {
+    const isSuperAdmin = currentUser.role === 'super_admin';
+    const isSelf = currentUser.userId === targetUserId;
+
+    if (!isSuperAdmin && !isSelf) {
+      throw new ForbiddenException('Only Super Admin can reset user passwords');
+    }
+
+    if (!newPassword || newPassword.trim().length < 6) {
+      throw new BadRequestException('New password must be at least 6 characters long');
+    }
+
+    const targetUser = await this.prisma.adminUser.findUnique({
+      where: { id: targetUserId },
+      include: { role: true },
+    });
+    if (!targetUser) throw new NotFoundException('User not found');
+
+    if (!isSuperAdmin && targetUser.role?.slug === 'super_admin' && !isSelf) {
+      throw new ForbiddenException('Only Super Admin can modify Super Admin accounts');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword.trim(), 10);
+    await this.prisma.adminUser.update({
+      where: { id: targetUserId },
+      data: { passwordHash },
+    });
+
+    return {
+      ok: true,
+      message: `Password for ${targetUser.name} has been reset successfully`,
+    };
+  }
 }
 

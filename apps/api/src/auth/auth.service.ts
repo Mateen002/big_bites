@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -187,5 +188,32 @@ export class AuthService {
 
   me(userId: string) {
     return this.adminMe(userId);
+  }
+
+  async changeAdminPassword(userId: string, newPassword: string, currentPassword?: string) {
+    if (!newPassword || newPassword.trim().length < 6) {
+      throw new BadRequestException('New password must be at least 6 characters long');
+    }
+    const user = await this.prisma.adminUser.findUnique({
+      where: { id: userId },
+      include: { role: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const isSuperAdmin = user.role?.slug === 'super_admin';
+    if (!isSuperAdmin && !currentPassword) {
+      throw new BadRequestException('Current password is required');
+    }
+    if (currentPassword && currentPassword.trim()) {
+      const match = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!match) throw new BadRequestException('Current password does not match');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword.trim(), 10);
+    await this.prisma.adminUser.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+    return { ok: true, message: 'Password updated successfully' };
   }
 }
