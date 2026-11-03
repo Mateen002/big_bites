@@ -57,16 +57,16 @@ export default function DashboardPage() {
   const k = data?.kpis;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Operations</p>
-          <h1 className="mt-1 font-display text-3xl text-white md:text-4xl">Dashboard</h1>
-          <p className="mt-1 text-sm text-stone-400">
+          <h1 className="mt-1 font-display text-2xl text-white sm:text-3xl md:text-4xl">Dashboard</h1>
+          <p className="mt-1 text-xs sm:text-sm text-stone-400">
             Revenue, margin, and kitchen mix — last {days} days.
           </p>
         </div>
-        <div className="flex rounded-xl bg-ink-700 p-1 ring-1 ring-white/5">
+        <div className="flex self-start sm:self-auto rounded-xl bg-ink-700 p-1 ring-1 ring-white/5 overflow-x-auto">
           {RANGES.map((r) => (
             <button
               key={r.days}

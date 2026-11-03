@@ -162,7 +162,7 @@ export default function ProductsPage() {
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex w-full items-center justify-end gap-2 pt-2 border-t border-white/5 sm:w-auto sm:border-0 sm:pt-0">
                 <button type="button" className="btn-ghost" onClick={() => move(p.id, -1)}>
                   ↑
                 </button>

@@ -465,7 +465,7 @@ export default function OrdersPage() {
   return (
     <div className="space-y-6">
       {/* Top Header & Live Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
             <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -473,7 +473,7 @@ export default function OrdersPage() {
               Live Kitchen Board
             </p>
           </div>
-          <h1 className="mt-1 font-display text-3xl font-bold text-white">Orders & Dispatch</h1>
+          <h1 className="mt-1 font-display text-2xl font-bold text-white sm:text-3xl">Orders & Dispatch</h1>
           <p className="mt-1 text-xs text-stone-400">
             {items.length} total orders · Auto-synced every 5s{' '}
             {lastSyncTime && `(Last updated: ${lastSyncTime.toLocaleTimeString()})`}
@@ -481,19 +481,19 @@ export default function OrdersPage() {
         </div>
 
         {/* Live Audio, Phone Settings, and Search Controls */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           {/* Sound Alert Toggle */}
           <button
             type="button"
             onClick={toggleSound}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition shadow-lg ${
+            className={`flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-xl px-3.5 py-2.5 text-xs font-bold transition shadow-lg ${
               soundEnabled
                 ? 'bg-amber-500 text-ink-950 shadow-amber-500/20 hover:bg-amber-400'
                 : 'border border-white/10 bg-white/5 text-stone-300 hover:bg-white/10 hover:text-white'
             }`}
           >
             <span>{soundEnabled ? '🔔' : '🔕'}</span>
-            <span>{soundEnabled ? 'Kitchen Buzzer: ACTIVE' : 'Kitchen Buzzer: OFF'}</span>
+            <span>{soundEnabled ? 'Buzzer: ON' : 'Buzzer: OFF'}</span>
           </button>
 
           {/* Multiple Phone Numbers Modal Button */}
@@ -505,11 +505,11 @@ export default function OrdersPage() {
               setTelegramStatus('');
               setWhatsAppTestStatus('');
             }}
-            className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2.5 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
+            className="flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2.5 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
             title="Configure multiple phone numbers for WhatsApp & Telegram alerts"
           >
             <span>📱</span>
-            <span>WhatsApp Numbers ({validStaffContacts.length})</span>
+            <span>WhatsApp ({validStaffContacts.length})</span>
           </button>
 
           {/* Manual Refresh Button */}
@@ -523,25 +523,27 @@ export default function OrdersPage() {
           </button>
 
           {/* Search Box */}
-          <input
-            className="input max-w-xs"
-            placeholder="Search order#, phone, zone…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
+          <div className="w-full sm:w-auto">
+            <input
+              className="input w-full sm:max-w-xs"
+              placeholder="Search order#, phone, zone…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
       {/* Repeating Unacknowledged Order Alert Banner */}
       {hasUnacknowledged && (
         <div className="rounded-2xl border-2 border-amber-500 bg-amber-500/15 p-4 shadow-2xl shadow-amber-500/20 animate-pulse">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-2xl font-black text-ink-950 shadow-md">
                 🔔
               </span>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <p className="text-base font-extrabold text-amber-200 uppercase tracking-wide">
                     🚨 {unacknowledgedOrders.length} New Order
                     {unacknowledgedOrders.length > 1 ? 's' : ''} Awaiting Acceptance!
@@ -563,11 +565,11 @@ export default function OrdersPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
               <button
                 type="button"
                 onClick={() => setIsAlarmMuted((m) => !m)}
-                className="rounded-xl border border-white/20 bg-white/10 px-3.5 py-2 text-xs font-bold text-stone-200 transition hover:bg-white/20"
+                className="w-full rounded-xl border border-white/20 bg-white/10 px-3.5 py-2 text-xs font-bold text-stone-200 transition hover:bg-white/20 sm:w-auto"
               >
                 {isAlarmMuted ? '🔔 Unmute Buzzer' : '🔕 Silence Buzzer'}
               </button>
@@ -578,7 +580,7 @@ export default function OrdersPage() {
                   playAcceptChime();
                   unacknowledgedOrders.forEach((o) => acknowledgeOrder(o));
                 }}
-                className="rounded-xl bg-amber-500 px-5 py-2 text-xs font-black uppercase tracking-wider text-ink-950 shadow-lg shadow-amber-500/30 transition hover:bg-amber-400"
+                className="w-full rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-ink-950 shadow-lg shadow-amber-500/30 transition hover:bg-amber-400 sm:w-auto"
               >
                 ✓ Accept All & Stop Alarm
               </button>
@@ -588,13 +590,13 @@ export default function OrdersPage() {
       )}
 
       {/* Status Filter Tabs */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-2 -mx-3.5 px-3.5 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-none">
         {['ALL', ...STATUSES].map((s) => (
           <button
             key={s}
             type="button"
             onClick={() => setFilter(s)}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
               filter === s
                 ? 'bg-accent text-ink-900 ring-2 ring-accent/30'
                 : 'bg-white/5 text-stone-400 hover:bg-white/10 hover:text-white'
@@ -697,14 +699,14 @@ export default function OrdersPage() {
                 </div>
 
                 {/* Workflow Actions */}
-                <div className="flex flex-col items-end gap-2.5 shrink-0">
+                <div className="w-full sm:w-auto flex flex-col items-stretch sm:items-end gap-2.5 shrink-0 pt-3 border-t border-white/5 sm:pt-0 sm:border-0">
                   {/* Primary Workflow Fast-Forward Button */}
                   {isAwaiting && (
                     <button
                       type="button"
                       disabled={busyId === o.id}
                       onClick={() => acknowledgeOrder(o)}
-                      className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-ink-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400 disabled:opacity-50"
+                      className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-bold text-ink-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400 disabled:opacity-50"
                     >
                       <span>🍳</span>
                       <span>Accept & Start Cooking</span>
@@ -716,7 +718,7 @@ export default function OrdersPage() {
                       type="button"
                       disabled={busyId === o.id}
                       onClick={() => advanceWorkflow(o)}
-                      className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-400 disabled:opacity-50"
+                      className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-400 disabled:opacity-50"
                     >
                       <span>🛵</span>
                       <span>Dispatch (Out for Delivery)</span>
@@ -728,7 +730,7 @@ export default function OrdersPage() {
                       type="button"
                       disabled={busyId === o.id}
                       onClick={() => advanceWorkflow(o)}
-                      className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-500 disabled:opacity-50"
+                      className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-500 disabled:opacity-50"
                     >
                       <span>✓</span>
                       <span>Mark Delivered</span>
@@ -736,7 +738,7 @@ export default function OrdersPage() {
                   )}
 
                   {/* WhatsApp Staff & Customer Dispatch Controls */}
-                  <div className="flex flex-wrap items-center justify-end gap-1.5">
+                  <div className="flex w-full flex-wrap items-center justify-start sm:justify-end gap-1.5">
                     {/* Render button for each configured staff contact */}
                     {validStaffContacts.map((contact) => (
                       <button
@@ -774,7 +776,7 @@ export default function OrdersPage() {
 
                     {/* Full Status Dropdown */}
                     <select
-                      className="input w-auto min-w-[130px] py-1.5 text-xs"
+                      className="input flex-1 sm:flex-initial sm:w-auto min-w-[130px] py-1.5 text-xs"
                       value={o.status}
                       disabled={busyId === o.id}
                       onChange={(e) => updateStatus(o.id, e.target.value)}
@@ -848,7 +850,7 @@ export default function OrdersPage() {
       {/* Dynamic Phone Numbers & Mobile Alerts Setup Modal */}
       {isAlertsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-xl rounded-2xl border border-white/15 bg-ink-900 p-6 shadow-2xl">
+          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-white/15 bg-ink-900 p-5 sm:p-6 shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div className="flex items-center gap-2.5">

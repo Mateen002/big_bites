@@ -237,10 +237,10 @@ export default function UsersPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           <Link
             href="/roles"
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-stone-300 transition hover:bg-white/10 hover:text-white"
+            className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-xs font-semibold text-stone-300 transition hover:bg-white/10 hover:text-white sm:flex-initial"
           >
             🛡 Manage Roles & Permissions
           </Link>
@@ -248,7 +248,7 @@ export default function UsersPage() {
             <button
               type="button"
               onClick={openCreateModal}
-              className="flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-xs font-bold text-ink-950 shadow-lg shadow-accent/20 transition hover:bg-accent-hover"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-xs font-bold text-ink-950 shadow-lg shadow-accent/20 transition hover:bg-accent-hover sm:flex-initial"
             >
               <span className="text-base leading-none">+</span>
               Add Team Member
@@ -333,8 +333,120 @@ export default function UsersPage() {
         )}
       </div>
 
-      {/* User Directory Table */}
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-ink-800/40">
+      {/* Mobile Team Member Cards (Visible on screens < md) */}
+      <div className="space-y-3 md:hidden">
+        {loading && !users.length ? (
+          <div className="card text-center py-10 text-stone-400">Loading team members...</div>
+        ) : filteredUsers.length === 0 ? (
+          <div className="card text-center py-10 text-stone-400">
+            {search ? 'No team members match your search.' : 'No team members found.'}
+          </div>
+        ) : (
+          filteredUsers.map((member) => {
+            const isCurrent = currentUser?.id === member.id;
+            const isMemberSuperAdmin = member.role?.slug === 'super_admin';
+            const initials = member.name
+              .split(' ')
+              .map((n) => n[0])
+              .slice(0, 2)
+              .join('')
+              .toUpperCase();
+
+            return (
+              <div key={member.id} className="card border border-white/10 p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl text-xs font-bold ${
+                        isMemberSuperAdmin
+                          ? 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/40'
+                          : member.role?.slug === 'admin'
+                            ? 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/40'
+                            : 'bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/40'
+                      }`}
+                    >
+                      {initials || 'U'}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-white truncate">{member.name}</span>
+                        {isCurrent && (
+                          <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                            You
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-stone-400 truncate">{member.email}</p>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-semibold ${
+                      isMemberSuperAdmin
+                        ? 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/30'
+                        : member.role?.slug === 'admin'
+                          ? 'bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30'
+                          : 'bg-indigo-500/15 text-indigo-300 ring-1 ring-indigo-500/30'
+                    }`}
+                  >
+                    <span>{isMemberSuperAdmin ? '👑' : member.role?.slug === 'admin' ? '🛡' : '👤'}</span>
+                    <span>{member.role?.name || 'Unassigned'}</span>
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-stone-500 pt-2 border-t border-white/5">
+                  <span>
+                    Joined{' '}
+                    {new Date(member.createdAt).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </span>
+                  <span>ID: {member.id.slice(-6)}</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/5">
+                  {(isSuperAdmin || isCurrent) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setResetUser(member);
+                        setResetPasswordInput('');
+                        setResetStatus(null);
+                      }}
+                      className="col-span-2 rounded-xl border border-amber-500/30 bg-amber-500/10 py-2 text-xs font-semibold text-amber-300 transition hover:bg-amber-500/20 text-center"
+                    >
+                      🔑 Reset Password
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => openEditModal(member)}
+                    className={`rounded-xl border border-white/10 bg-white/5 py-2 text-xs font-semibold text-stone-300 transition hover:bg-white/10 hover:text-white text-center ${
+                      !isCurrent && (isSuperAdmin || (!isMemberSuperAdmin && isAdmin)) ? '' : 'col-span-2'
+                    }`}
+                  >
+                    Edit Details
+                  </button>
+                  {!isCurrent && (isSuperAdmin || (!isMemberSuperAdmin && isAdmin)) && (
+                    <button
+                      type="button"
+                      onClick={() => setDeletingUser(member)}
+                      className="rounded-xl border border-rose-500/20 bg-rose-500/10 py-2 text-xs font-semibold text-rose-300 transition hover:bg-rose-500/20 text-center"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* User Directory Desktop Table (Visible on screens >= md) */}
+      <div className="hidden md:block overflow-hidden rounded-2xl border border-white/10 bg-ink-800/40">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-white/10 bg-ink-800/80 text-xs font-semibold uppercase tracking-wider text-stone-400">
@@ -466,7 +578,7 @@ export default function UsersPage() {
       {/* Create / Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl border border-white/15 bg-ink-900 p-6 shadow-2xl">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-white/15 bg-ink-900 p-5 sm:p-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div>
                 <h3 className="text-lg font-bold text-white">
@@ -578,7 +690,7 @@ export default function UsersPage() {
       {/* Delete Confirmation Modal */}
       {deletingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-rose-500/20 bg-ink-900 p-6 shadow-2xl">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-rose-500/20 bg-ink-900 p-5 sm:p-6 shadow-2xl">
             <h3 className="text-lg font-bold text-white">Remove Team Member?</h3>
             <p className="mt-2 text-sm text-stone-400">
               Are you sure you want to remove <strong className="text-white">{deletingUser.name}</strong> (
@@ -608,7 +720,7 @@ export default function UsersPage() {
       {/* Super Admin Direct Password Reset Modal */}
       {resetUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-amber-500/30 bg-ink-900 p-6 shadow-2xl">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-amber-500/30 bg-ink-900 p-5 sm:p-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div className="flex items-center gap-2.5">
                 <span className="text-xl">🔑</span>

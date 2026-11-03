@@ -126,12 +126,22 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
+      {/* Mobile Drawer Backdrop Overlay */}
+      {navOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm transition-opacity lg:hidden"
+          onClick={() => setNavOpen(false)}
+          aria-label="Close navigation overlay"
+        />
+      )}
+
+      {/* Sidebar Drawer */}
       <aside
-        className={`border-white/5 bg-ink-800 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:border-r ${
-          navOpen ? 'block border-b' : 'hidden lg:flex'
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r border-white/10 bg-ink-900 shadow-2xl transition-transform duration-300 ease-in-out lg:static lg:w-[260px] lg:max-w-none lg:shadow-none lg:translate-x-0 lg:border-white/5 lg:bg-ink-800 lg:sticky lg:top-0 lg:h-screen ${
+          navOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="p-5">
+        <div className="flex-1 overflow-y-auto p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="font-display text-2xl text-accent">BigBites</p>
@@ -139,7 +149,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </div>
             <button
               type="button"
-              className="btn-ghost lg:hidden"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-stone-400 transition hover:bg-white/10 hover:text-white lg:hidden"
               onClick={() => setNavOpen(false)}
               aria-label="Close menu"
             >
@@ -152,6 +162,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={l.href}
                 href={l.href}
+                onClick={() => setNavOpen(false)}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
                   active(l.href)
                     ? 'bg-accent/15 font-semibold text-accent ring-1 ring-accent/25'
@@ -165,7 +176,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </nav>
         </div>
 
-        <div className="mt-auto border-t border-white/5 p-5">
+        <div className="mt-auto shrink-0 border-t border-white/5 bg-ink-900/40 p-5">
           <div className="flex items-center justify-between gap-2">
             <p className="truncate text-sm font-medium text-white">{user?.name || 'Administrator'}</p>
             <span
@@ -207,23 +218,44 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <div className="flex min-h-screen flex-col">
-        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-white/5 bg-ink-900/90 px-4 py-3 backdrop-blur lg:hidden">
-          <button type="button" className="btn-ghost" onClick={() => setNavOpen((v) => !v)}>
-            Menu
-          </button>
-          <p className="font-display text-lg text-accent">BigBites</p>
-          <Link href="/orders" className="text-xs font-semibold text-stone-400">
-            Orders
-          </Link>
+      <div className="flex min-h-screen min-w-0 flex-col">
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-white/5 bg-ink-900/95 px-3.5 py-3 backdrop-blur-md lg:hidden">
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-stone-200 transition hover:bg-white/10 active:scale-95"
+              onClick={() => setNavOpen(true)}
+              aria-label="Open menu"
+            >
+              <span className="text-xl">☰</span>
+            </button>
+            <div>
+              <p className="font-display text-lg font-bold leading-none text-accent">BigBites</p>
+              <p className="text-[10px] uppercase tracking-wider text-stone-500 leading-none mt-1">Admin Panel</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/orders"
+              className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition ${
+                pathname === '/orders'
+                  ? 'bg-accent text-ink-950 shadow-md shadow-accent/20'
+                  : 'border border-white/10 bg-white/5 text-stone-300 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <span>⚡</span>
+              <span>Orders</span>
+            </Link>
+          </div>
         </header>
-        <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+        <main className="flex-1 overflow-x-hidden p-3.5 sm:p-5 md:p-6 lg:p-8">{children}</main>
       </div>
 
       {/* Self-Service Change Password Modal */}
       {showPasswordModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-ink-900 p-6 shadow-2xl">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-ink-900 p-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div className="flex items-center gap-2.5">
                 <span className="text-xl">🔑</span>

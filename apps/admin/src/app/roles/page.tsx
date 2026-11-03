@@ -186,17 +186,17 @@ export default function RolesPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           <Link
             href="/users"
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-stone-300 transition hover:bg-white/10 hover:text-white"
+            className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-xs font-semibold text-stone-300 transition hover:bg-white/10 hover:text-white sm:flex-initial"
           >
             👥 Manage Team Members
           </Link>
           <button
             type="button"
             onClick={startCreate}
-            className="btn"
+            className="btn flex-1 sm:flex-initial"
             disabled={!isSuperAdmin && !isAdmin}
           >
             + Create New Role
@@ -439,7 +439,7 @@ export default function RolesPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2">
+                <div className="flex w-full items-center justify-end gap-2 pt-2 border-t border-white/5 sm:w-auto sm:border-0 sm:pt-0">
                   {isSuperAdmin ? (
                     <>
                       <button

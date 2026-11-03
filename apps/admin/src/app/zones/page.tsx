@@ -290,7 +290,7 @@ export default function ZonesPage() {
           />
         </div>
 
-        <div className="md:col-span-3 flex items-center justify-between pt-3 border-t border-white/10">
+        <div className="md:col-span-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-white/10">
           <label className="flex items-center gap-2.5 cursor-pointer text-sm text-stone-300">
             <input
               type="checkbox"
@@ -301,7 +301,7 @@ export default function ZonesPage() {
             <span>Active for customer selection at checkout</span>
           </label>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-end gap-3">
             {editing && (
               <button type="button" className="btn-ghost" onClick={startCreate}>
                 Cancel
@@ -349,7 +349,7 @@ export default function ZonesPage() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex w-full items-center justify-end gap-2 pt-2 border-t border-white/5 sm:w-auto sm:border-0 sm:pt-0">
                 <button
                   type="button"
                   onClick={() => startEdit(z)}

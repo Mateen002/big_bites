@@ -191,7 +191,7 @@ export default function PromosPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         <div className="rounded-2xl border border-white/10 bg-ink-800/60 p-4">
           <p className="text-xs font-medium uppercase tracking-wider text-stone-500">Total Vouchers</p>
           <p className="mt-1 text-2xl font-bold text-white">{stats.total}</p>
@@ -419,7 +419,7 @@ export default function PromosPage() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex w-full items-center justify-end gap-2 pt-2 border-t border-white/5 sm:w-auto sm:border-0 sm:pt-0 shrink-0">
                   <button
                     type="button"
                     onClick={() => startEdit(p)}
@@ -459,7 +459,7 @@ export default function PromosPage() {
       {/* Delete Confirmation Modal */}
       {deletingPromo && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-rose-500/20 bg-ink-900 p-6 shadow-2xl">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-rose-500/20 bg-ink-900 p-5 sm:p-6 shadow-2xl">
             <h3 className="text-lg font-bold text-white">Delete Promo Code?</h3>
             <p className="mt-2 text-sm text-stone-400">
               Are you sure you want to delete promo code <strong className="text-white font-mono">{deletingPromo.code}</strong> (
