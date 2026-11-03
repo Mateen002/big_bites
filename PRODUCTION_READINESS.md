@@ -1,4 +1,4 @@
-# BigBites E-Commerce — Production-Readiness & Commercial QA Audit Report
+# BigBites E-Commerce - Production-Readiness & Commercial QA Audit Report
 
 **Audit Date:** October 30, 2026  
 **Auditor:** Senior Lead Systems & Security Architect / QA Lead  

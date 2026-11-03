@@ -36,7 +36,7 @@ export function StockFreezerClient({
           <p className="hero-rise text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">Scheduled Pantry Stock-Up</p>
           <h1 className="hero-brand mt-1 font-display text-4xl sm:text-5xl text-white font-black">Stock Your Freezer</h1>
           <p className="hero-rise mt-2 max-w-md text-xs sm:text-sm text-purple-200/80">
-            Bulk samosa packs, rolls, chicken patties, nuggets & kababs — ready to fry anytime.
+            Bulk samosa packs, rolls, chicken patties, nuggets & kababs - ready to fry anytime.
           </p>
         </div>
       </div>

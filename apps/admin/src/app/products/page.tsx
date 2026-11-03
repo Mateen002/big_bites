@@ -158,7 +158,7 @@ export default function ProductsPage() {
                     )}
                   </p>
                   <p className="text-xs text-stone-400">
-                    {p.category.name} · cost {p.costPkr != null ? `Rs ${p.costPkr}` : '—'} · {p.slug}
+                    {p.category.name} · cost {p.costPkr != null ? `Rs ${p.costPkr}` : '-'} · {p.slug}
                   </p>
                 </div>
               </div>

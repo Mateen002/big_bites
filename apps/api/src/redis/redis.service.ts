@@ -22,7 +22,7 @@ export class RedisService implements OnModuleDestroy {
       });
     } catch {
       this.useMemory = true;
-      this.logger.warn('Redis unavailable — using in-memory cart store');
+      this.logger.warn('Redis unavailable - using in-memory cart store');
     }
   }
 
@@ -40,7 +40,7 @@ export class RedisService implements OnModuleDestroy {
       return true;
     } catch {
       this.useMemory = true;
-      this.logger.warn('Redis connection failed — falling back to in-memory store');
+      this.logger.warn('Redis connection failed - falling back to in-memory store');
       return false;
     }
   }

@@ -10,8 +10,8 @@ import { api } from '@/lib/api';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'BigBites — Lahore',
-  description: 'Order hot desi & fast food now, or stock your freezer — BigBites Lahore.',
+  title: 'BigBites - Lahore',
+  description: 'Order hot desi & fast food now, or stock your freezer - BigBites Lahore.',
 };
 
 export const revalidate = 60;
@@ -41,7 +41,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/logo.png"
-                    alt="BigBites — Good Food, Big Mood"
+                    alt="BigBites - Good Food, Big Mood"
                     className="h-16 w-auto object-contain drop-shadow-[0_2px_12px_rgba(245,184,0,0.3)]"
                   />
                 </Link>

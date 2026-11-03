@@ -396,7 +396,7 @@ export default function PromosPage() {
                     <span className="font-mono text-base font-bold text-accent tracking-wider">
                       {p.code}
                     </span>
-                    <span className="text-stone-300 font-medium">— {p.name}</span>
+                    <span className="text-stone-300 font-medium">- {p.name}</span>
                     <span
                       className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider ${
                         p.isActive

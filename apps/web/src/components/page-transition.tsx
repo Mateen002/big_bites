@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 
-/** Lightweight route enter — CSS only, no Framer scroll observers. */
+/** Lightweight route enter - CSS only, no Framer scroll observers. */
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [key, setKey] = useState(pathname);

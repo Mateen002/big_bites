@@ -1,13 +1,13 @@
-# BigBites — Lahore
+# BigBites - Lahore
 
 Pakistani food e-commerce with dual browsing modes (**Order Now** / **Stock Your Freezer**), fully dynamic categories, and a NestJS API.
 
 ## Stack
 
-- `apps/web` — Next.js storefront (port 3000)
-- `apps/admin` — Next.js admin panel (port 3001)
-- `apps/api` — NestJS REST API (port 4000)
-- `packages/shared` — shared Zod schemas & enums
+- `apps/web` - Next.js storefront (port 3000)
+- `apps/admin` - Next.js admin panel (port 3001)
+- `apps/api` - NestJS REST API (port 4000)
+- `packages/shared` - shared Zod schemas & enums
 - PostgreSQL + Redis (Docker Compose)
 
 ## Quick start
@@ -22,7 +22,7 @@ pnpm db:seed
 pnpm dev
 ```
 
-Local default uses **SQLite** (`file:./dev.db`) so you can run without Docker. Redis is optional — the API falls back to an in-memory cart store.
+Local default uses **SQLite** (`file:./dev.db`) so you can run without Docker. Redis is optional - the API falls back to an in-memory cart store.
 
 For PostgreSQL + Redis via Docker:
 
@@ -48,10 +48,10 @@ Categories are database-driven. Set `fulfillmentType` to:
 - `HOT_NOW` → appears under Order Now
 - `SCHEDULED` → appears under Stock Your Freezer
 
-Option groups (spice, size, add-ons, pack size) attach to categories in admin — no frontend code changes required.
+Option groups (spice, size, add-ons, pack size) attach to categories in admin - no frontend code changes required.
 
 ## Payments
 
-- **COD** — fully working
-- **JazzCash / Easypaisa** — sandbox adapters (simulate via redirect URL)
-- **Stripe** — stub adapter (plug `STRIPE_SECRET_KEY` later)
+- **COD** - fully working
+- **JazzCash / Easypaisa** - sandbox adapters (simulate via redirect URL)
+- **Stripe** - stub adapter (plug `STRIPE_SECRET_KEY` later)

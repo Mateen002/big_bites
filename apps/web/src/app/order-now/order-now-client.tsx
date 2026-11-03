@@ -38,7 +38,7 @@ export function OrderNowClient({
             Order Now
           </h1>
           <p className="hero-rise mt-2 max-w-md text-xs sm:text-sm text-purple-200/80">
-            Desi Karahi, Masala Kababs, Burgers, Wraps and crispy fried snacks — cooked hot and delivered across Lahore.
+            Desi Karahi, Masala Kababs, Burgers, Wraps and crispy fried snacks - cooked hot and delivered across Lahore.
           </p>
         </div>
       </div>

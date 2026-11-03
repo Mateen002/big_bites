@@ -35,7 +35,7 @@ export function HomeClient({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/logo.png"
-                alt="BigBites — Good Food, Big Mood"
+                alt="BigBites - Good Food, Big Mood"
                 className="h-24 sm:h-32 md:h-40 w-auto object-contain drop-shadow-[0_8px_30px_rgba(245,184,0,0.4)]"
               />
             </div>
@@ -53,7 +53,7 @@ export function HomeClient({
               className="hero-rise mt-4 max-w-lg text-sm sm:text-base leading-relaxed text-purple-200/80"
               style={{ animationDelay: '0.2s' }}
             >
-              Freshly made with love in Gulberg III. Enjoy hot Karahi, Wraps, Burgers and Paratha Rolls tonight — or stock your freezer with ready-to-fry snack packs.
+              Freshly made with love in Gulberg III. Enjoy hot Karahi, Wraps, Burgers and Paratha Rolls tonight - or stock your freezer with ready-to-fry snack packs.
             </p>
 
             <div
@@ -118,7 +118,7 @@ export function HomeClient({
               <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">Hot & Fast</p>
               <h2 className="mt-3 font-display text-4xl text-white md:text-5xl lg:text-6xl">Order Now</h2>
               <p className="mt-3 max-w-sm text-sm text-white/85 md:text-base">
-                Desi, burgers, fresh-fried — cooked to order and out the door ASAP.
+                Desi, burgers, fresh-fried - cooked to order and out the door ASAP.
               </p>
               <span className="mt-6 inline-block border-b border-amber-400 pb-1 text-sm font-semibold text-amber-300 transition group-hover:border-amber-300 group-hover:text-amber-200">
                 Browse hot menu →
@@ -142,7 +142,7 @@ export function HomeClient({
               <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">No rush</p>
               <h2 className="mt-3 font-display text-4xl text-white md:text-5xl lg:text-6xl">Stock Your Freezer</h2>
               <p className="mt-3 max-w-sm text-sm text-white/85 md:text-base">
-                Raw packs by weight — schedule delivery when it suits your week.
+                Raw packs by weight - schedule delivery when it suits your week.
               </p>
               <span className="mt-6 inline-block border-b border-amber-400 pb-1 text-sm font-semibold text-amber-300 transition group-hover:border-amber-300 group-hover:text-amber-200">
                 Browse frozen packs →
@@ -160,7 +160,7 @@ export function HomeClient({
               What&apos;s cooking hot
             </h2>
             <p className="mt-4 text-purple-200/80">
-              Real BigBites menu — desi, fast food, and fried, ready to order now.
+              Real BigBites menu - desi, fast food, and fried, ready to order now.
             </p>
           </Reveal>
 
@@ -227,7 +227,7 @@ export function HomeClient({
             <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">Stock up</p>
             <h2 className="mt-3 font-display text-4xl font-bold leading-tight text-white md:text-5xl">Your freezer, sorted</h2>
             <p className="mt-4 text-base text-purple-200/90">
-              Pack size, weight, pieces per pack — scheduled delivery across Lahore. No rush.
+              Pack size, weight, pieces per pack - scheduled delivery across Lahore. No rush.
             </p>
           </Reveal>
 
@@ -319,7 +319,7 @@ export function HomeClient({
             Hungry now? Or stocking up?
           </h2>
           <p className="mx-auto mt-5 max-w-md text-white/75">
-            Same BigBites kitchen. Pick your pace — we&apos;ll bring it to DHA, Gulberg, Johar Town & more.
+            Same BigBites kitchen. Pick your pace - we&apos;ll bring it to DHA, Gulberg, Johar Town & more.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-3">
             <Link href="/order-now" className="btn-primary">

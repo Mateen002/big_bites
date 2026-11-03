@@ -1,4 +1,4 @@
-# BigBites — Production Domain & Extension Decision Guide
+# BigBites - Production Domain & Extension Decision Guide
 
 > **Project:** BigBites Food Platform (Lahore, Pakistan)  
 > **Last Verified:** November 2026  

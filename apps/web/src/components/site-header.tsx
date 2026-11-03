@@ -202,18 +202,18 @@ export function SiteHeader({ categories }: { categories: Category[] }) {
           <Link
             href="/"
             className="flex items-center gap-2 shrink-0 group py-0.5"
-            title="BigBites — Good Food, Big Mood"
+            title="BigBites - Good Food, Big Mood"
           >
             {/* Official BigBites Logo */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"
-              alt="BigBites — Good Food, Big Mood"
+              alt="BigBites - Good Food, Big Mood"
               className="h-11 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_2px_8px_rgba(245,184,0,0.35)]"
             />
           </Link>
 
-          {/* Mode switch — desktop */}
+          {/* Mode switch - desktop */}
           <div className="ml-3 hidden items-center gap-1 rounded-xl border border-amber-400/20 bg-purple-950/60 p-1 md:flex">
             <Link
               href="/order-now"

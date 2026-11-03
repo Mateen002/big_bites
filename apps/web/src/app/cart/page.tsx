@@ -18,7 +18,7 @@ export default function CartPage() {
         <h1 className="font-display text-4xl text-ink">Your cart</h1>
         {!cart.items.length ? (
           <p className="mt-6 text-ink-mute">
-            Empty —{' '}
+            Empty -{' '}
             <Link href="/order-now" className="font-semibold text-chili-500">
               Order Now
             </Link>{' '}

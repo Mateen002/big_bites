@@ -19,7 +19,7 @@
 }
 
 html {
-  /* Keep native scroll — CSS smooth-scroll makes wheel feel laggy on Windows */
+  /* Keep native scroll - CSS smooth-scroll makes wheel feel laggy on Windows */
   scroll-behavior: auto;
 }
 
@@ -127,7 +127,7 @@ textarea::placeholder {
   display: none;
 }
 
-/* Paint isolation — skips offscreen work while scrolling */
+/* Paint isolation - skips offscreen work while scrolling */
 .scroll-section {
   content-visibility: auto;
   contain-intrinsic-size: auto 600px;
@@ -309,7 +309,7 @@ textarea::placeholder {
   animation: menu-in var(--dur-fast) var(--ease-out) both;
 }
 
-/* Scroll reveal — toggled by Reveal component */
+/* Scroll reveal - toggled by Reveal component */
 .reveal,
 .reveal-left,
 .reveal-right,

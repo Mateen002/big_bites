@@ -40,7 +40,7 @@ const CATEGORY_META: Record<
   'Desi Food Items': {
     name: 'Desi Food',
     slug: 'desi-food',
-    description: 'Karahi, haleem, kabab & home-style desi — hot, made to order.',
+    description: 'Karahi, haleem, kabab & home-style desi - hot, made to order.',
     image: '/images/desi.jpg',
     fulfillmentType: FulfillmentType.HOT_NOW,
     displayOrder: 1,
@@ -48,7 +48,7 @@ const CATEGORY_META: Record<
   'Fast Food': {
     name: 'Fast Food',
     slug: 'fast-food',
-    description: 'Burgers, wraps & paratha rolls — hot and ready.',
+    description: 'Burgers, wraps & paratha rolls - hot and ready.',
     image: '/images/fast.jpg',
     fulfillmentType: FulfillmentType.HOT_NOW,
     displayOrder: 2,
@@ -64,7 +64,7 @@ const CATEGORY_META: Record<
   'Frozen Items': {
     name: 'Frozen Items',
     slug: 'frozen-items',
-    description: 'Stock your freezer — packs for home frying, scheduled delivery.',
+    description: 'Stock your freezer - packs for home frying, scheduled delivery.',
     image: '/images/frozen.jpg',
     fulfillmentType: FulfillmentType.SCHEDULED,
     displayOrder: 1,
@@ -243,8 +243,8 @@ async function main() {
         slug,
         description:
           meta.fulfillmentType === FulfillmentType.SCHEDULED
-            ? `${item.name} — freezer pack for home cooking.`
-            : `${item.name} — ${meta.name.toLowerCase()} from BigBites Lahore.`,
+            ? `${item.name} - freezer pack for home cooking.`
+            : `${item.name} - ${meta.name.toLowerCase()} from BigBites Lahore.`,
         image: meta.image,
         pricePkr: base.pricePkr,
         costPkr: Math.round(base.pricePkr * 0.58),
@@ -359,7 +359,7 @@ async function main() {
   });
 
   console.log(
-    `BigBites seed complete — ${productCount} products, ${optionGroupCount} size option groups, 4 categories from Excel.`,
+    `BigBites seed complete - ${productCount} products, ${optionGroupCount} size option groups, 4 categories from Excel.`,
   );
 }
 

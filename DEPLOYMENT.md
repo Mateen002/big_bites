@@ -1,5 +1,5 @@
 
-# BigBites — VPS Deployment & Production Launch Guide
+# BigBites - VPS Deployment & Production Launch Guide
 
 > This guide walks you through deploying BigBites on a fresh Linux VPS (Ubuntu 22.04 or 24.04 LTS), testing the live storefront and admin panel via your VPS IP address, and attaching your domain at the end.
 

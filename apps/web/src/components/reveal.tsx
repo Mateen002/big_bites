@@ -11,7 +11,7 @@ const VARIANT_CLASS: Record<RevealVariant, string> = {
   scale: 'reveal-scale',
 };
 
-/** One-shot IntersectionObserver reveal — disconnects after fire (smooth, no scroll lag). */
+/** One-shot IntersectionObserver reveal - disconnects after fire (smooth, no scroll lag). */
 export function Reveal({
   children,
   className = '',
@@ -35,7 +35,7 @@ export function Reveal({
       return;
     }
 
-    // Already visible on load — reveal immediately for smoother first paint
+    // Already visible on load - reveal immediately for smoother first paint
     const rect = el.getBoundingClientRect();
     if (rect.top < window.innerHeight * 0.92 && rect.bottom > 0) {
       requestAnimationFrame(() => el.classList.add('is-in'));

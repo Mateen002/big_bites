@@ -1,7 +1,7 @@
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PaymentAdapter, PaymentInitiateInput, PaymentResult } from './payment-adapter';
 
-/** Stripe stub — ready for live keys later. */
+/** Stripe stub - ready for live keys later. */
 export class StripeStubAdapter implements PaymentAdapter {
   method = PaymentMethod.STRIPE;
 
@@ -15,7 +15,7 @@ export class StripeStubAdapter implements PaymentAdapter {
       reference,
       redirectUrl: `${baseUrl}/api/v1/payments/sandbox/complete?ref=${reference}&provider=stripe`,
       message: hasKey
-        ? 'Stripe stub with key present — replace with Checkout Session creation.'
+        ? 'Stripe stub with key present - replace with Checkout Session creation.'
         : 'Stripe stub: no STRIPE_SECRET_KEY. Simulated checkout URL provided.',
       sandbox: true,
     };

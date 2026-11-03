@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-/** Eased counter for cart totals — short tween, no Framer. */
+/** Eased counter for cart totals - short tween, no Framer. */
 export function AnimatedNumber({ value }: { value: number }) {
   const [display, setDisplay] = useState(value);
   const fromRef = useRef(value);

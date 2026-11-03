@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# BigBites — Production VPS Bootstrap Script (Ubuntu 22.04 / 24.04 LTS)
+# BigBites - Production VPS Bootstrap Script (Ubuntu 22.04 / 24.04 LTS)
 # ==============================================================================
 
 set -e

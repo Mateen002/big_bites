@@ -1,4 +1,4 @@
-# BigBites E-Commerce Platform — Comprehensive QA Test Plan
+# BigBites E-Commerce Platform - Comprehensive QA Test Plan
 
 **Document Version:** 1.0.0  
 **Target System:** BigBites Storefront (`apps/web`), Admin Panel (`apps/admin`), REST API (`apps/api`), Shared Enums & Schemas (`packages/shared`)  

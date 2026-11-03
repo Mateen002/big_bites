@@ -379,7 +379,7 @@ export class OrdersService {
       const itemsList =
         order.items
           ?.map((i: any) => `• *${i.quantity}×* ${i.productName}`)
-          .join('\n') || '—';
+          .join('\n') || '-';
 
       const text = [
         `🔔 *NEW BIGBITES ORDER RECEIVED!*`,
@@ -538,7 +538,7 @@ export class OrdersService {
     const itemsList =
       order.items
         ?.map((i: any) => `• *${i.quantity}×* ${i.productName}`)
-        .join('\n') || '—';
+        .join('\n') || '-';
 
     const messageText = `🔔 *BIGBITES KITCHEN ORDER #${order.orderNumber}*
 ━━━━━━━━━━━━━━━━━━

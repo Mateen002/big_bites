@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * BigBites — Emergency Super Admin Password Reset & Account Management Tool
+ * BigBites - Emergency Super Admin Password Reset & Account Management Tool
  * 
  * Usage:
  *   node deploy/reset-admin-password.js --list

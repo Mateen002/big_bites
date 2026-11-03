@@ -63,7 +63,7 @@ export default function DashboardPage() {
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Operations</p>
           <h1 className="mt-1 font-display text-2xl text-white sm:text-3xl md:text-4xl">Dashboard</h1>
           <p className="mt-1 text-xs sm:text-sm text-stone-400">
-            Revenue, margin, and kitchen mix — last {days} days.
+            Revenue, margin, and kitchen mix - last {days} days.
           </p>
         </div>
         <div className="flex self-start sm:self-auto rounded-xl bg-ink-700 p-1 ring-1 ring-white/5 overflow-x-auto">
@@ -125,7 +125,7 @@ export default function DashboardPage() {
 
           {data.catalog.productsMissingCost > 0 && (
             <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-              {data.catalog.productsMissingCost} products missing cost — margin uses ~58% estimate.{' '}
+              {data.catalog.productsMissingCost} products missing cost - margin uses ~58% estimate.{' '}
               <Link href="/products" className="font-semibold underline underline-offset-2">
                 Set cost on products
               </Link>

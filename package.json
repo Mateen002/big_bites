@@ -2,7 +2,7 @@
   "name": "bigbites",
   "private": true,
   "version": "1.0.0",
-  "description": "BigBites — Lahore Pakistani food e-commerce platform",
+  "description": "BigBites - Lahore Pakistani food e-commerce platform",
   "scripts": {
     "dev": "pnpm -r --parallel --filter @bigbites/api --filter @bigbites/web --filter @bigbites/admin run dev",
     "dev:api": "pnpm --filter @bigbites/api dev",
