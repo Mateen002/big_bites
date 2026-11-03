@@ -1,8 +1,20 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+export function getApiUrl(): string {
+  if (typeof window !== 'undefined') {
+    const { hostname, protocol } = window.location;
+    if (hostname.endsWith('bigbites.pk')) {
+      return `${protocol}//api.bigbites.pk/api/v1`;
+    }
+    if (hostname === '116.203.215.86') {
+      return `${protocol}//116.203.215.86:4000/api/v1`;
+    }
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+}
+
 const TOKEN_KEY = 'bigbites_admin_token';
 
 export function apiOrigin() {
-  return API_URL.replace(/\/api\/v1\/?$/, '');
+  return getApiUrl().replace(/\/api\/v1\/?$/, '');
 }
 
 /** Resolve catalog image paths (local /images, uploaded /uploads, or absolute). */
@@ -30,7 +42,7 @@ export async function adminFetch<T>(path: string, options: RequestInit = {}): Pr
   const token = getToken();
   if (token) headers.set('Authorization', `Bearer ${token}`);
 
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  const res = await fetch(`${getApiUrl()}${path}`, { ...options, headers });
   if (res.status === 401) {
     setToken(null);
     if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
@@ -147,7 +159,7 @@ export const adminApi = {
     if (token) headers.set('Authorization', `Bearer ${token}`);
     const body = new FormData();
     body.append('file', file);
-    const res = await fetch(`${API_URL}/uploads/image`, { method: 'POST', headers, body });
+    const res = await fetch(`${getApiUrl()}/uploads/image`, { method: 'POST', headers, body });
     if (res.status === 401) {
       setToken(null);
       if (typeof window !== 'undefined') window.location.href = '/login';

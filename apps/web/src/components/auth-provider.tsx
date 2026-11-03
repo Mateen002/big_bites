@@ -9,9 +9,9 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { getApiUrl } from '../lib/api';
 
 const TOKEN_KEY = 'bigbites_customer_token';
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
 export type CustomerUser = {
   id: string;
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     try {
-      const res = await fetch(`${API_URL}/auth/customer/me`, {
+      const res = await fetch(`${getApiUrl()}/auth/customer/me`, {
         headers: { Authorization: `Bearer ${existing}` },
         cache: 'no-store',
       });
@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const res = await fetch(`${API_URL}/auth/customer/login`, {
+      const res = await fetch(`${getApiUrl()}/auth/customer/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = useCallback(
     async (input: { name: string; email: string; password: string; phone?: string }) => {
-      const res = await fetch(`${API_URL}/auth/customer/signup`, {
+      const res = await fetch(`${getApiUrl()}/auth/customer/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input),
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (input: { name?: string; phone?: string }) => {
       const existing = getCustomerToken();
       if (!existing) throw new Error('Not signed in');
-      const res = await fetch(`${API_URL}/auth/customer/me`, {
+      const res = await fetch(`${getApiUrl()}/auth/customer/me`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

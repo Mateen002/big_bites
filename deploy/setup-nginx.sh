@@ -22,3 +22,4 @@ sudo systemctl restart nginx
 sudo systemctl enable nginx
 
 echo "=== Nginx Reverse Proxy is Active & Live! ==="
+

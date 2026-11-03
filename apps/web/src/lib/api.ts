@@ -1,10 +1,21 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+export function getApiUrl(): string {
+  if (typeof window !== 'undefined') {
+    const { hostname, protocol } = window.location;
+    if (hostname.endsWith('bigbites.pk')) {
+      return `${protocol}//api.bigbites.pk/api/v1`;
+    }
+    if (hostname === '116.203.215.86') {
+      return `${protocol}//116.203.215.86:4000/api/v1`;
+    }
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+}
 
 const SESSION_KEY = 'bigbites_cart_session';
 const CUSTOMER_TOKEN_KEY = 'bigbites_customer_token';
 
 export function apiOrigin() {
-  return API_URL.replace(/\/api\/v1\/?$/, '');
+  return getApiUrl().replace(/\/api\/v1\/?$/, '');
 }
 
 /** Resolve /uploads from API; leave /images and absolute URLs as-is. */
@@ -209,7 +220,7 @@ async function request<T>(
         : undefined;
 
   const fetchPromise = (async () => {
-    const res = await fetchWithRetry(`${API_URL}${path}`, {
+    const res = await fetchWithRetry(`${getApiUrl()}${path}`, {
       ...options,
       headers,
       cache: fetchCache,
