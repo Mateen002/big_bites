@@ -1,12 +1,22 @@
 export function getApiUrl(): string {
   if (typeof window !== 'undefined') {
-    const { hostname, protocol } = window.location;
-    if (hostname.endsWith('bigbites.pk')) {
+    const { hostname, protocol, host } = window.location;
+    // Local development (localhost / 127.0.0.1 without reverse proxy)
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:4000/api/v1';
+    }
+    // LAN dev testing on local Wi-Fi without Nginx
+    if (/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(hostname)) {
+      return `${protocol}//${hostname}:4000/api/v1`;
+    }
+    // Dedicated API subdomain (if loaded directly on api.bigbites.pk)
+    if (hostname === 'api.bigbites.pk') {
       return `${protocol}//api.bigbites.pk/api/v1`;
     }
-    if (hostname === '116.203.215.86') {
-      return `${protocol}//116.203.215.86:4000/api/v1`;
-    }
+    // Production domains & server IP fallback (bigbites.pk, admin.bigbites.pk, 116.203.215.86):
+    // Use the current host's standard port 80/443 /api/v1 proxy route handled by Nginx.
+    // This avoids carrier port blocking, CORS preflights, and mixed content warnings.
+    return `${protocol}//${host}/api/v1`;
   }
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 }
@@ -149,7 +159,7 @@ async function fetchWithRetry(url: string, init: RequestInit, retries = 2, delay
   }
   const detail = lastError instanceof Error ? lastError.message : String(lastError);
   throw new Error(
-    `BigBites backend API could not be reached at ${url} (${detail}). Please verify the API server is running on port 4000.`,
+    `BigBites backend API could not be reached at ${url} (${detail}). Please verify your connection or check that the backend is running.`,
   );
 }
 
