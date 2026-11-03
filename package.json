@@ -8,7 +8,7 @@
     "dev:api": "pnpm --filter @bigbites/api dev",
     "dev:web": "pnpm --filter @bigbites/web dev",
     "dev:admin": "pnpm --filter @bigbites/admin dev",
-    "build": "pnpm -r run build",
+    "build": "pnpm --filter @bigbites/shared build && pnpm --filter @bigbites/api prisma:generate && pnpm --filter @bigbites/api build && pnpm --filter @bigbites/admin build && pnpm --filter @bigbites/web build",
     "build:api": "pnpm --filter @bigbites/shared build && pnpm --filter @bigbites/api prisma:generate && pnpm --filter @bigbites/api build",
     "start:api": "pnpm --filter @bigbites/api start",
     "db:generate": "pnpm --filter @bigbites/api prisma:generate",
